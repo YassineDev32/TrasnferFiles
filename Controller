@@ -1,0 +1,32 @@
+@RestController
+@RequestMapping("/api/services/{serviceId}/technologies")
+@RequiredArgsConstructor
+public class ServiceTechnologiesController {
+
+    private final ApiServiceNouveauTechnologies technologiesUseCase;
+
+    @PatchMapping
+    public ResponseEntity<TechnologiesOperationResponse> handleTechnologyOperation(
+            @PathVariable UUID serviceId,
+            @Valid @RequestBody TechnologiesOperationRequest request,
+            @RequestHeader("X-User-Id") String userId) {
+        
+        RequestContext context = RequestContext.builder()
+            .serviceId(serviceId)
+            .userId(userId)
+            .requestTime(ZonedDateTime.now())
+            .build();
+
+        TechnologiesOperationResponse response = technologiesUseCase.handle(request, context);
+        return ResponseEntity.status(mapStatus(response.getStatus())).body(response);
+    }
+
+    private HttpStatus mapStatus(TechnologiesOperationResponse.OperationStatus status) {
+        return switch (status) {
+            case SUCCESS -> HttpStatus.OK;
+            case ALREADY_EXISTS -> HttpStatus.CONFLICT;
+            case NOT_FOUND -> HttpStatus.NOT_FOUND;
+            case FAILED -> HttpStatus.INTERNAL_SERVER_ERROR;
+        };
+    }
+}

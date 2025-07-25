@@ -1,0 +1,17 @@
+@Data
+public class TechnologiesOperationRequest {
+
+    public enum Operation {
+        ADD, REMOVE
+    }
+
+    @NotNull
+    private Operation operation;
+
+    @NotBlank
+    @Size(max = 50)
+    private String technologyName;
+
+    @Size(max = 100)
+    private String technologyVersion;
+}

@@ -1,0 +1,16 @@
+@Data
+@Builder
+public class TechnologiesOperationResponse {
+
+    private UUID serviceId;
+    private String technologyName;
+    private OperationStatus status;
+    private ZonedDateTime updatedAt;
+
+    public enum OperationStatus {
+        SUCCESS,
+        FAILED,
+        ALREADY_EXISTS,
+        NOT_FOUND
+    }
+}

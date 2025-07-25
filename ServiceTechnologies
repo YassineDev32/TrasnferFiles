@@ -1,0 +1,24 @@
+@Entity
+@Table(name = "service_technologies")
+@Getter
+@Setter
+@NoArgsConstructor
+public class ServiceTechnologies {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "api_service_id", nullable = false)
+    private APIService apiService;
+
+    @Column(nullable = false, length = 50)
+    private String technologyName;
+
+    @Column(length = 100)
+    private String technologyVersion;
+
+    @CreationTimestamp
+    private ZonedDateTime createdAt;
+}

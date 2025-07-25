@@ -1,0 +1,33 @@
+@Repository
+@RequiredArgsConstructor
+public class TechnologiesRepositoryImp implements TechnologiesRepository {
+
+    private final TechnologiesJpaRepository jpaRepository;
+
+    @Override
+    public List<ServiceTechnologies> findByApiServiceId(UUID apiServiceId) {
+        return jpaRepository.findByApiServiceId(apiServiceId);
+    }
+
+    @Override
+    public void save(ServiceTechnologies technology) {
+        jpaRepository.save(technology);
+    }
+
+    @Override
+    public void deleteByApiServiceAndTechnologyName(UUID apiServiceId, String techName) {
+        jpaRepository.deleteByApiServiceIdAndTechnologyName(apiServiceId, techName);
+    }
+
+    @Override
+    public boolean existsByApiServiceAndTechnologyName(APIService apiService, String techName) {
+        return jpaRepository.existsByApiServiceAndTechnologyName(apiService, techName);
+    }
+}
+
+public interface TechnologiesJpaRepository extends JpaRepository<ServiceTechnologies, UUID> {
+    // Méthodes Spring Data JPA
+    List<ServiceTechnologies> findByApiServiceId(UUID apiServiceId);
+    void deleteByApiServiceIdAndTechnologyName(UUID apiServiceId, String techName);
+    boolean existsByApiServiceAndTechnologyName(APIService apiService, String techName);
+}

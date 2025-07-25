@@ -1,0 +1,104 @@
+@Service
+@RequiredArgsConstructor
+public class ApiServiceNouveauTechnologiesImp implements ApiServiceNouveauTechnologies {
+
+    private final APIServiceRepository apiServiceRepository;
+    private final TechnologiesRepository technologiesRepository;
+
+    @Override
+    @Transactional
+    public TechnologiesOperationResponse handle(TechnologiesOperationRequest request, RequestContext context) {
+        try {
+            APIService apiService = apiServiceRepository.findById(context.getServiceId())
+                .orElseThrow(() -> new EntityNotFoundException("APIService not found"));
+
+            switch (request.getOperation()) {
+                case ADD:
+                    return handleAddOperation(apiService, request, context);
+                case REMOVE:
+                    return handleRemoveOperation(apiService, request, context);
+                default:
+                    throw new IllegalArgumentException("Invalid operation");
+            }
+        } catch (Exception e) {
+            return TechnologiesOperationResponse.builder()
+                .serviceId(context.getServiceId())
+                .technologyName(request.getTechnologyName())
+                .status(TechnologiesOperationResponse.OperationStatus.FAILED)
+                .updatedAt(ZonedDateTime.now())
+                .build();
+        }
+    }
+
+    private TechnologiesOperationResponse handleAddOperation(APIService apiService, 
+            TechnologiesOperationRequest request, RequestContext context) {
+        
+        if (isCoreTechnology(request.getTechnologyName())) {
+            updateCoreTechnology(apiService, request, true);
+            return buildSuccessResponse(context, request);
+        }
+
+        if (technologiesRepository.existsByApiServiceAndTechnologyName(apiService, request.getTechnologyName())) {
+            return TechnologiesOperationResponse.builder()
+                .serviceId(context.getServiceId())
+                .technologyName(request.getTechnologyName())
+                .status(TechnologiesOperationResponse.OperationStatus.ALREADY_EXISTS)
+                .updatedAt(ZonedDateTime.now())
+                .build();
+        }
+
+        ServiceTechnologies tech = new ServiceTechnologies();
+        tech.setApiService(apiService);
+        tech.setTechnologyName(request.getTechnologyName().toUpperCase());
+        tech.setTechnologyVersion(request.getTechnologyVersion());
+        technologiesRepository.save(tech);
+
+        return buildSuccessResponse(context, request);
+    }
+
+    private TechnologiesOperationResponse handleRemoveOperation(APIService apiService,
+            TechnologiesOperationRequest request, RequestContext context) {
+        
+        if (isCoreTechnology(request.getTechnologyName())) {
+            updateCoreTechnology(apiService, request, false);
+            return buildSuccessResponse(context, request);
+        }
+
+        technologiesRepository.deleteByApiServiceAndTechnologyName(
+            apiService.getId(), 
+            request.getTechnologyName().toUpperCase()
+        );
+
+        return buildSuccessResponse(context, request);
+    }
+
+    private boolean isCoreTechnology(String techName) {
+        return Arrays.asList("SONAR", "JAVA_17", "JFROG").contains(techName.toUpperCase());
+    }
+
+    private void updateCoreTechnology(APIService apiService, TechnologiesOperationRequest request, boolean enable) {
+        switch (request.getTechnologyName().toUpperCase()) {
+            case "SONAR":
+                apiService.setSonarized(enable);
+                if (enable) apiService.setSonarReportUrl(request.getTechnologyVersion());
+                else apiService.setSonarReportUrl(null);
+                break;
+            case "JAVA_17":
+                apiService.setJava17Migrated(enable);
+                break;
+            case "JFROG":
+                apiService.setJfrogMigrated(enable);
+                break;
+        }
+        apiServiceRepository.save(apiService);
+    }
+
+    private TechnologiesOperationResponse buildSuccessResponse(RequestContext context, TechnologiesOperationRequest request) {
+        return TechnologiesOperationResponse.builder()
+            .serviceId(context.getServiceId())
+            .technologyName(request.getTechnologyName())
+            .status(TechnologiesOperationResponse.OperationStatus.SUCCESS)
+            .updatedAt(ZonedDateTime.now())
+            .build();
+    }
+}

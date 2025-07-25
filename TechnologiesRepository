@@ -1,0 +1,7 @@
+public interface TechnologiesRepository {
+
+    List<ServiceTechnologies> findByApiServiceId(UUID apiServiceId);
+    void save(ServiceTechnologies technology);
+    void deleteByApiServiceAndTechnologyName(UUID apiServiceId, String techName);
+    boolean existsByApiServiceAndTechnologyName(APIService apiService, String techName);
+}

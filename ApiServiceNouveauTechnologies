@@ -1,0 +1,3 @@
+public interface ApiServiceNouveauTechnologies {
+    TechnologiesOperationResponse handle(TechnologiesOperationRequest request, RequestContext context);
+}
