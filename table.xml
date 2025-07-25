@@ -1,42 +1,54 @@
-<changeSet id="4-create-service-technologies-table" author="votre_nom">
-    <createTable tableName="service_technologies">
-        <!-- Colonne ID -->
+<changeSet id="4-create-service-technologies-table" author="your_name" dbms="postgresql">
+    <!-- Vérifie que la table n'existe pas déjà -->
+    <preConditions onFail="MARK_RAN">
+        <not>
+            <tableExists tableName="service_technologies"/>
+        </not>
+    </preConditions>
+
+    <!-- Création de la table -->
+    <createTable tableName="service_technologies" remarks="Stocke les technologies associées aux services API">
         <column name="id" type="uuid">
-            <constraints primaryKey="true" nullable="false"/>
+            <constraints primaryKey="true" nullable="false" primaryKeyName="pk_service_technologies"/>
         </column>
 
-        <!-- Clé étrangère vers api.service -->
         <column name="api_service_id" type="uuid">
-            <constraints nullable="false" foreignKeyName="fk_service_tech_to_api_service"
-                         referencedTableName="api.service" referencedColumnNames="id"/>
+            <constraints nullable="false"/>
         </column>
 
-        <!-- Colonnes métiers -->
         <column name="technology_name" type="varchar(50)">
             <constraints nullable="false"/>
         </column>
+
         <column name="technology_version" type="varchar(100)"/>
 
-        <!-- Timestamp automatique -->
         <column name="created_at" type="timestamp with time zone">
             <constraints nullable="false"/>
         </column>
     </createTable>
 
-    <!-- Index pour optimiser les requêtes -->
+    <!-- Clé étrangère vers api.service -->
+    <addForeignKeyConstraint 
+        baseTableName="service_technologies"
+        baseColumnNames="api_service_id"
+        referencedTableName="api.service"
+        referencedColumnNames="id"
+        constraintName="fk_service_tech_api_service"
+        deferrable="false"
+        initiallyDeferred="false"
+        onDelete="CASCADE"/>
+
+    <!-- Index pour les performances -->
     <createIndex tableName="service_technologies" indexName="idx_service_tech_api_service">
         <column name="api_service_id"/>
     </createIndex>
 
-    <createIndex tableName="service_technologies" indexName="idx_service_tech_name">
+    <createIndex tableName="service_technologies" indexName="idx_service_tech_name" unique="false">
         <column name="technology_name"/>
     </createIndex>
 
-    <!-- Commentaire pour documentation -->
-    <sqlComment>
-        <![CDATA[
-        Table de gestion des technologies associées aux services API.
-        Relation many-to-one avec api.service.
-        ]]>
-    </sqlComment>
+    <!-- Script de rollback -->
+    <rollback>
+        <dropTable tableName="service_technologies" cascadeConstraints="true"/>
+    </rollback>
 </changeSet>
