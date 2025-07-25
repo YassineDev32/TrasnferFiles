@@ -1,0 +1,5 @@
+@Data
+public class GetTechnologiesRequest {
+    @NotNull
+    private UUID serviceId;
+}

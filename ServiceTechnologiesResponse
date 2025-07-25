@@ -1,0 +1,24 @@
+@Data
+@Builder
+public class ServiceTechnologiesResponse {
+    private UUID serviceId;
+    private String serviceName;
+    
+    // Technologies natives
+    private boolean java17Migrated;
+    private boolean sonarized;
+    private String sonarReportUrl;
+    private boolean jfrogMigrated;
+    private String springVersion;
+    
+    // Technologies additionnelles
+    private List<TechnologyDTO> additionalTechnologies;
+
+    @Data
+    @AllArgsConstructor
+    public static class TechnologyDTO {
+        private String name;
+        private String version;
+        private ZonedDateTime createdAt;
+    }
+}

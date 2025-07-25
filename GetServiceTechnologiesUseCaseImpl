@@ -1,0 +1,40 @@
+@Service
+@RequiredArgsConstructor
+public class GetServiceTechnologiesUseCaseImpl implements GetServiceTechnologiesUseCase {
+
+    private final APIServiceRepository apiServiceRepository;
+    private final TechnologiesRepository technologiesRepository;
+
+    @Override
+    @Transactional(readOnly = true)
+    public ServiceTechnologiesResponse handle(GetTechnologiesRequest request) {
+        APIService service = apiServiceRepository.findById(request.getServiceId())
+            .orElseThrow(() -> new EntityNotFoundException("Service not found"));
+
+        List<ServiceTechnologies> additionalTechs = technologiesRepository.findByApiServiceId(request.getServiceId());
+
+        return mapToResponse(service, additionalTechs);
+    }
+
+    private ServiceTechnologiesResponse mapToResponse(APIService service, List<ServiceTechnologies> additionalTechs) {
+        return ServiceTechnologiesResponse.builder()
+            .serviceId(service.getId())
+            .serviceName(service.getName())
+            .java17Migrated(service.isJava17Migrated())
+            .sonarized(service.isSonarized())
+            .sonarReportUrl(service.getSonarReportUrl())
+            .jfrogMigrated(service.isJfrogMigrated())
+            .springVersion(service.getSpringVersion())
+            .additionalTechnologies(mapAdditionalTechnologies(additionalTechs))
+            .build();
+    }
+
+    private List<TechnologyDTO> mapAdditionalTechnologies(List<ServiceTechnologies> techs) {
+        return techs.stream()
+            .map(t -> new TechnologyDTO(
+                t.getTechnologyName(),
+                t.getTechnologyVersion(),
+                t.getCreatedAt()))
+            .toList();
+    }
+}
