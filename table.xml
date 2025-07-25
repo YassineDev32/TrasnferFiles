@@ -1,57 +1,54 @@
-<databaseChangeLog
-    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+<changeSet id="4-create-service-technologies-table" author="your_name" dbms="postgresql">
+    <!-- Vérifie que la table n'existe pas déjà -->
+    <preConditions onFail="MARK_RAN">
+        <not>
+            <tableExists tableName="service_technologies"/>
+        </not>
+    </preConditions>
 
-    <!-- Vos changesets existants... -->
+    <!-- Création de la table -->
+    <createTable tableName="service_technologies" remarks="Stocke les technologies associées aux services API">
+        <column name="id" type="uuid">
+            <constraints primaryKey="true" nullable="false" primaryKeyName="pk_service_technologies"/>
+        </column>
 
-    <changeSet id="4-create-service-technologies-table" author="votre_nom">
-        <preConditions onFail="MARK_RAN">
-            <not>
-                <tableExists tableName="service_technologies"/>
-            </not>
-        </preConditions>
+        <column name="api_service_id" type="uuid">
+            <constraints nullable="false"/>
+        </column>
 
-        <createTable tableName="service_technologies" remarks="Table de gestion des technologies des services API">
-            <column name="id" type="uuid">
-                <constraints primaryKey="true" nullable="false"/>
-            </column>
-            
-            <column name="api_service_id" type="uuid">
-                <constraints nullable="false"/>
-            </column>
-            
-            <column name="technology_name" type="varchar(50)">
-                <constraints nullable="false"/>
-            </column>
-            
-            <column name="technology_version" type="varchar(100)"/>
-            
-            <column name="created_at" type="timestamp with time zone">
-                <constraints nullable="false"/>
-            </column>
-        </createTable>
+        <column name="technology_name" type="varchar(50)">
+            <constraints nullable="false"/>
+        </column>
 
-        <addForeignKeyConstraint 
-            baseTableName="service_technologies"
-            baseColumnNames="api_service_id"
-            referencedTableName="api.service"
-            referencedColumnNames="id"
-            constraintName="fk_service_tech_to_api_service"
-            deferrable="false"
-            initiallyDeferred="false"/>
+        <column name="technology_version" type="varchar(100)"/>
 
-        <createIndex tableName="service_technologies" indexName="idx_service_tech_api_service">
-            <column name="api_service_id"/>
-        </createIndex>
+        <column name="created_at" type="timestamp with time zone">
+            <constraints nullable="false"/>
+        </column>
+    </createTable>
 
-        <createIndex tableName="service_technologies" indexName="idx_service_tech_name">
-            <column name="technology_name"/>
-        </createIndex>
+    <!-- Clé étrangère vers api.service -->
+    <addForeignKeyConstraint 
+        baseTableName="service_technologies"
+        baseColumnNames="api_service_id"
+        referencedTableName="api.service"
+        referencedColumnNames="id"
+        constraintName="fk_service_tech_api_service"
+        deferrable="false"
+        initiallyDeferred="false"
+        onDelete="CASCADE"/>
 
-        <rollback>
-            <dropTable tableName="service_technologies"/>
-        </rollback>
-    </changeSet>
-</databaseChangeLog>
+    <!-- Index pour les performances -->
+    <createIndex tableName="service_technologies" indexName="idx_service_tech_api_service">
+        <column name="api_service_id"/>
+    </createIndex>
+
+    <createIndex tableName="service_technologies" indexName="idx_service_tech_name" unique="false">
+        <column name="technology_name"/>
+    </createIndex>
+
+    <!-- Script de rollback -->
+    <rollback>
+        <dropTable tableName="service_technologies" cascadeConstraints="true"/>
+    </rollback>
+</changeSet>
