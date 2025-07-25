@@ -1,0 +1,42 @@
+<changeSet id="4-create-service-technologies-table" author="votre_nom">
+    <createTable tableName="service_technologies">
+        <!-- Colonne ID -->
+        <column name="id" type="uuid">
+            <constraints primaryKey="true" nullable="false"/>
+        </column>
+
+        <!-- Clé étrangère vers api.service -->
+        <column name="api_service_id" type="uuid">
+            <constraints nullable="false" foreignKeyName="fk_service_tech_to_api_service"
+                         referencedTableName="api.service" referencedColumnNames="id"/>
+        </column>
+
+        <!-- Colonnes métiers -->
+        <column name="technology_name" type="varchar(50)">
+            <constraints nullable="false"/>
+        </column>
+        <column name="technology_version" type="varchar(100)"/>
+
+        <!-- Timestamp automatique -->
+        <column name="created_at" type="timestamp with time zone">
+            <constraints nullable="false"/>
+        </column>
+    </createTable>
+
+    <!-- Index pour optimiser les requêtes -->
+    <createIndex tableName="service_technologies" indexName="idx_service_tech_api_service">
+        <column name="api_service_id"/>
+    </createIndex>
+
+    <createIndex tableName="service_technologies" indexName="idx_service_tech_name">
+        <column name="technology_name"/>
+    </createIndex>
+
+    <!-- Commentaire pour documentation -->
+    <sqlComment>
+        <![CDATA[
+        Table de gestion des technologies associées aux services API.
+        Relation many-to-one avec api.service.
+        ]]>
+    </sqlComment>
+</changeSet>
