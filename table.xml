@@ -1,42 +1,57 @@
-<changeSet id="4-create-service-technologies-table" author="votre_nom">
-    <createTable tableName="service_technologies">
-        <!-- Colonne ID -->
-        <column name="id" type="uuid">
-            <constraints primaryKey="true" nullable="false"/>
-        </column>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
 
-        <!-- Clé étrangère vers api.service -->
-        <column name="api_service_id" type="uuid">
-            <constraints nullable="false" foreignKeyName="fk_service_tech_to_api_service"
-                         referencedTableName="api.service" referencedColumnNames="id"/>
-        </column>
+    <!-- Vos changesets existants... -->
 
-        <!-- Colonnes métiers -->
-        <column name="technology_name" type="varchar(50)">
-            <constraints nullable="false"/>
-        </column>
-        <column name="technology_version" type="varchar(100)"/>
+    <changeSet id="4-create-service-technologies-table" author="votre_nom">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="service_technologies"/>
+            </not>
+        </preConditions>
 
-        <!-- Timestamp automatique -->
-        <column name="created_at" type="timestamp with time zone">
-            <constraints nullable="false"/>
-        </column>
-    </createTable>
+        <createTable tableName="service_technologies" remarks="Table de gestion des technologies des services API">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            
+            <column name="api_service_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            
+            <column name="technology_name" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            
+            <column name="technology_version" type="varchar(100)"/>
+            
+            <column name="created_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
 
-    <!-- Index pour optimiser les requêtes -->
-    <createIndex tableName="service_technologies" indexName="idx_service_tech_api_service">
-        <column name="api_service_id"/>
-    </createIndex>
+        <addForeignKeyConstraint 
+            baseTableName="service_technologies"
+            baseColumnNames="api_service_id"
+            referencedTableName="api.service"
+            referencedColumnNames="id"
+            constraintName="fk_service_tech_to_api_service"
+            deferrable="false"
+            initiallyDeferred="false"/>
 
-    <createIndex tableName="service_technologies" indexName="idx_service_tech_name">
-        <column name="technology_name"/>
-    </createIndex>
+        <createIndex tableName="service_technologies" indexName="idx_service_tech_api_service">
+            <column name="api_service_id"/>
+        </createIndex>
 
-    <!-- Commentaire pour documentation -->
-    <sqlComment>
-        <![CDATA[
-        Table de gestion des technologies associées aux services API.
-        Relation many-to-one avec api.service.
-        ]]>
-    </sqlComment>
-</changeSet>
+        <createIndex tableName="service_technologies" indexName="idx_service_tech_name">
+            <column name="technology_name"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="service_technologies"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>
