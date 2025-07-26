@@ -3,43 +3,32 @@ public class UpdateApiServiceRequest {
     @NotNull
     private UUID serviceId;
     
-    // Champs de base
     private String name;
-    private String description;
     private String trigramme;
+    private String description;
     private Boolean bridgeCommunication;
     private String criticality;
     private String poCodev;
     private String techlead;
-    
-    // Technologies natives
     private Boolean java17Migrated;
     private Boolean sonarized;
     private String sonarReportUrl;
     private Boolean jfrogMigrated;
-    private String springVersion;
-    
-    // Métadonnées
     private String githubUrl;
     private String developmentStatus;
+    private String springVersion;
     private String bridgeName;
     private String documentedBy;
     private Boolean documented;
     private Boolean publishedOnSkies;
     private Boolean deployedOnDev;
     private Boolean migrationTestedOnDev;
-    
-    // Sources de données
     private DataSourcesDTO dataSources;
-    
-    // Relations
     private List<String> clientConsumers;
     private List<String> consumes;
     private List<String> consumedBy;
-    
-    // Technologies additionnelles
-    @Valid
-    private List<TechnologyUpdateDTO> technologies;
+    private List<EndpointDTO> endpoints;
+    private String databaseSchema;
 
     @Data
     public static class DataSourcesDTO {
@@ -50,14 +39,11 @@ public class UpdateApiServiceRequest {
     }
 
     @Data
-    public static class TechnologyUpdateDTO {
-        @NotBlank
-        private String name;
-        private String version;
-        private Operation operation;
-    }
-
-    public enum Operation {
-        ADD, REMOVE, UPDATE
+    public static class EndpointDTO {
+        private String method;
+        private String path;
+        private String curl;
+        private String expectedResponse;
+        private String description;
     }
 }
