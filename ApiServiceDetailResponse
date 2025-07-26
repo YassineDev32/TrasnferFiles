@@ -1,47 +1,50 @@
 @Data
 @Builder
-public class ApiServiceDetailResponse {
-    // Tous les champs de APIService
+public class ApiServiceResponse {
     private UUID id;
     private String name;
     private String trigramme;
     private String description;
-    private Boolean bridgeCommunication;
+    private boolean bridgeCommunication;
     private String criticality;
     private String poCodev;
     private String techlead;
-    private Boolean java17Migrated;
-    private Boolean sonarized;
+    private boolean java17Migrated;
+    private boolean sonarized;
     private String sonarReportUrl;
-    private Boolean jfrogMigrated;
+    private boolean jfrogMigrated;
     private String githubUrl;
     private String developmentStatus;
     private String springVersion;
     private String bridgeName;
     private String documentedBy;
-    private Boolean documented;
-    private Boolean publishedOnSkies;
-    private Boolean deployedOnDev;
-    private Boolean migrationTestedOnDev;
+    private boolean documented;
+    private boolean publishedOnSkies;
+    private boolean deployedOnDev;
+    private boolean migrationTestedOnDev;
     private DataSourcesDTO dataSources;
     private List<String> clientConsumers;
     private List<String> consumes;
     private List<String> consumedBy;
-    private List<TechnologyDTO> technologies;
+    private List<EndpointDTO> endpoints;
+    private String databaseSchema;
 
     @Data
-    @AllArgsConstructor
-    public static class TechnologyDTO {
-        private String name;
-        private String version;
-        private ZonedDateTime createdAt;
+    @Builder
+    public static class DataSourcesDTO {
+        private boolean rabbitMQ;
+        private boolean commonDB;
+        private boolean dedicatedDB;
+        private boolean s3;
     }
 
     @Data
-    public static class DataSourcesDTO {
-        private Boolean rabbitMQ;
-        private Boolean commonDB;
-        private Boolean dedicatedDB;
-        private Boolean s3;
+    @Builder
+    public static class EndpointDTO {
+        private String method;
+        private String path;
+        private String curl;
+        private String expectedResponse;
+        private String description;
     }
 }
