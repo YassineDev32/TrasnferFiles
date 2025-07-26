@@ -3,7 +3,7 @@
 public class UpdateApiServiceUseCaseImpl implements UpdateApiServiceUseCase {
 
     private final APIServiceRepository apiServiceRepository;
-    private final TechnologiesRepository technologiesRepository;
+    private final TechnologyRepository technologyRepository;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -24,25 +24,51 @@ public class UpdateApiServiceUseCaseImpl implements UpdateApiServiceUseCase {
 
     private void updateServiceFields(APIService service, UpdateApiServiceRequest request) {
         try {
-            BeanUtils.copyProperties(request, service, 
-                "serviceId", "technologies", "dataSources");
+            // Update simple fields
+            if (request.getName() != null) service.setName(request.getName());
+            if (request.getTrigramme() != null) service.setTrigramme(request.getTrigramme());
+            if (request.getDescription() != null) service.setDescription(request.getDescription());
+            if (request.getBridgeCommunication() != null) service.setBridgeCommunication(request.getBridgeCommunication());
+            if (request.getCriticality() != null) service.setCriticality(request.getCriticality());
+            if (request.getPoCodev() != null) service.setPoCodev(request.getPoCodev());
+            if (request.getTechlead() != null) service.setTechlead(request.getTechlead());
+            if (request.getDocumented() != null) service.setDocumented(request.getDocumented());
+            if (request.getPublishedOnSkies() != null) service.setPublishedOnSkies(request.getPublishedOnSkies());
+            if (request.getDeployedOnDev() != null) service.setDeployedOnDev(request.getDeployedOnDev());
+            if (request.getMigrationTestedOnDev() != null) service.setMigrationTestedOnDev(request.getMigrationTestedOnDev());
             
+            // Update nested dataSources
             if (request.getDataSources() != null) {
-                objectMapper.updateValue(service.getDataSources(), request.getDataSources());
+                if (service.getDataSources() == null) {
+                    service.setDataSources(new DataSources());
+                }
+                if (request.getDataSources().getRabbitMQ() != null) {
+                    service.getDataSources().setRabbitMQ(request.getDataSources().getRabbitMQ());
+                }
+                if (request.getDataSources().getCommonDB() != null) {
+                    service.getDataSources().setCommonDB(request.getDataSources().getCommonDB());
+                }
+                if (request.getDataSources().getDedicatedDB() != null) {
+                    service.getDataSources().setDedicatedDB(request.getDataSources().getDedicatedDB());
+                }
+                if (request.getDataSources().getS3() != null) {
+                    service.getDataSources().setS3(request.getDataSources().getS3());
+                }
             }
             
-            updateListIfPresent(service::setClientConsumers, request.getClientConsumers());
-            updateListIfPresent(service::setConsumes, request.getConsumes());
-            updateListIfPresent(service::setConsumedBy, request.getConsumedBy());
+            // Update lists
+            if (request.getClientConsumers() != null) {
+                service.setClientConsumers(new ArrayList<>(request.getClientConsumers()));
+            }
+            if (request.getConsumes() != null) {
+                service.setConsumes(new ArrayList<>(request.getConsumes()));
+            }
+            if (request.getConsumedBy() != null) {
+                service.setConsumedBy(new ArrayList<>(request.getConsumedBy()));
+            }
             
         } catch (Exception e) {
             throw new TechnicalException("Field update failed", e);
-        }
-    }
-
-    private <T> void updateListIfPresent(Consumer<List<T>> setter, List<T> newValues) {
-        if (newValues != null) {
-            setter.accept(new ArrayList<>(newValues));
         }
     }
 
@@ -58,23 +84,23 @@ public class UpdateApiServiceUseCaseImpl implements UpdateApiServiceUseCase {
     }
 
     private void addTechnology(APIService service, TechnologyUpdateDTO tech) {
-        if (technologiesRepository.existsByApiServiceAndTechnologyName(service, tech.getName())) {
+        if (technologyRepository.existsByApiServiceIdAndTechnologyName(service.getId(), tech.getName())) {
             throw new ConflictException("Technology " + tech.getName() + " already exists");
         }
 
         ServiceTechnologies newTech = new ServiceTechnologies();
-        newTech.setApiService(service);
+        newTech.setApiServiceId(service.getId());
         newTech.setTechnologyName(tech.getName().toUpperCase());
         newTech.setTechnologyVersion(tech.getVersion());
-        technologiesRepository.save(newTech);
+        technologyRepository.save(newTech);
     }
 
     private void updateTechnology(APIService service, TechnologyUpdateDTO tech) {
-        technologiesRepository.findByApiServiceAndTechnologyName(service, tech.getName())
+        technologyRepository.findByApiServiceIdAndTechnologyName(service.getId(), tech.getName())
             .ifPresentOrElse(
                 existingTech -> {
                     existingTech.setTechnologyVersion(tech.getVersion());
-                    technologiesRepository.save(existingTech);
+                    technologyRepository.save(existingTech);
                 },
                 () -> {
                     throw new EntityNotFoundException("Technology " + tech.getName() + " not found");
@@ -83,28 +109,68 @@ public class UpdateApiServiceUseCaseImpl implements UpdateApiServiceUseCase {
     }
 
     private void removeTechnology(APIService service, String techName) {
-        if (!technologiesRepository.existsByApiServiceAndTechnologyName(service, techName)) {
+        if (!technologyRepository.existsByApiServiceIdAndTechnologyName(service.getId(), techName)) {
             throw new EntityNotFoundException("Technology " + techName + " not found");
         }
-        technologiesRepository.deleteByApiServiceAndTechnologyName(service.getId(), techName);
+        technologyRepository.deleteByApiServiceIdAndTechnologyName(service.getId(), techName);
     }
 
     private ApiServiceDetailResponse mapToResponse(APIService service) {
         ApiServiceDetailResponse response = new ApiServiceDetailResponse();
-        BeanUtils.copyProperties(service, response);
         
-        List<ServiceTechnologies> technologies = technologiesRepository.findByApiServiceId(service.getId());
-        response.setTechnologies(mapTechnologies(technologies));
+        // Map simple fields
+        response.setId(service.getId());
+        response.setName(service.getName());
+        response.setTrigramme(service.getTrigramme());
+        response.setDescription(service.getDescription());
+        response.setBridgeCommunication(service.isBridgeCommunication());
+        response.setCriticality(service.getCriticality());
+        response.setPoCodev(service.getPoCodev());
+        response.setTechlead(service.getTechlead());
+        response.setJava17Migrated(service.isJava17Migrated());
+        response.setSonarized(service.isSonarized());
+        response.setSonarReportUrl(service.getSonarReportUrl());
+        response.setJfrogMigrated(service.isJfrogMigrated());
+        response.setGithubUrl(service.getGithubUrl());
+        response.setDevelopmentStatus(service.getDevelopmentStatus());
+        response.setSpringVersion(service.getSpringVersion());
+        response.setBridgeName(service.getBridgeName());
+        response.setDocumentedBy(service.getDocumentedBy());
+        response.setDocumented(service.isDocumented());
+        response.setPublishedOnSkies(service.isPublishedOnSkies());
+        response.setDeployedOnDev(service.isDeployedOnDev());
+        response.setMigrationTestedOnDev(service.isMigrationTestedOnDev());
         
-        return response;
-    }
-
-    private List<TechnologyDTO> mapTechnologies(List<ServiceTechnologies> technologies) {
-        return technologies.stream()
-            .map(t -> new TechnologyDTO(
+        // Map DataSources
+        if (service.getDataSources() != null) {
+            ApiServiceDetailResponse.DataSourcesDTO dataSourcesDTO = new ApiServiceDetailResponse.DataSourcesDTO();
+            dataSourcesDTO.setRabbitMQ(service.getDataSources().isRabbitMQ());
+            dataSourcesDTO.setCommonDB(service.getDataSources().isCommonDB());
+            dataSourcesDTO.setDedicatedDB(service.getDataSources().isDedicatedDB());
+            dataSourcesDTO.setS3(service.getDataSources().isS3());
+            response.setDataSources(dataSourcesDTO);
+        }
+        
+        // Map lists
+        if (service.getClientConsumers() != null) {
+            response.setClientConsumers(new ArrayList<>(service.getClientConsumers()));
+        }
+        if (service.getConsumes() != null) {
+            response.setConsumes(new ArrayList<>(service.getConsumes()));
+        }
+        if (service.getConsumedBy() != null) {
+            response.setConsumedBy(new ArrayList<>(service.getConsumedBy()));
+        }
+        
+        // Map technologies
+        List<ServiceTechnologies> technologies = technologyRepository.findByApiServiceId(service.getId());
+        response.setTechnologies(technologies.stream()
+            .map(t -> new ApiServiceDetailResponse.TechnologyDTO(
                 t.getTechnologyName(),
                 t.getTechnologyVersion(),
                 t.getCreatedAt()))
-            .toList();
+            .toList());
+        
+        return response;
     }
 }
