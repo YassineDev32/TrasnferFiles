@@ -1,0 +1,47 @@
+@Data
+@Builder
+public class ApiServiceDetailResponse {
+    // Tous les champs de APIService
+    private UUID id;
+    private String name;
+    private String trigramme;
+    private String description;
+    private Boolean bridgeCommunication;
+    private String criticality;
+    private String poCodev;
+    private String techlead;
+    private Boolean java17Migrated;
+    private Boolean sonarized;
+    private String sonarReportUrl;
+    private Boolean jfrogMigrated;
+    private String githubUrl;
+    private String developmentStatus;
+    private String springVersion;
+    private String bridgeName;
+    private String documentedBy;
+    private Boolean documented;
+    private Boolean publishedOnSkies;
+    private Boolean deployedOnDev;
+    private Boolean migrationTestedOnDev;
+    private DataSourcesDTO dataSources;
+    private List<String> clientConsumers;
+    private List<String> consumes;
+    private List<String> consumedBy;
+    private List<TechnologyDTO> technologies;
+
+    @Data
+    @AllArgsConstructor
+    public static class TechnologyDTO {
+        private String name;
+        private String version;
+        private ZonedDateTime createdAt;
+    }
+
+    @Data
+    public static class DataSourcesDTO {
+        private Boolean rabbitMQ;
+        private Boolean commonDB;
+        private Boolean dedicatedDB;
+        private Boolean s3;
+    }
+}

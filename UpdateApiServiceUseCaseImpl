@@ -1,0 +1,110 @@
+@Service
+@RequiredArgsConstructor
+public class UpdateApiServiceUseCaseImpl implements UpdateApiServiceUseCase {
+
+    private final APIServiceRepository apiServiceRepository;
+    private final TechnologiesRepository technologiesRepository;
+    private final ObjectMapper objectMapper;
+
+    @Override
+    @Transactional
+    public ApiServiceDetailResponse handle(UpdateApiServiceRequest request) {
+        APIService service = apiServiceRepository.findById(request.getServiceId())
+            .orElseThrow(() -> new EntityNotFoundException("APIService not found"));
+
+        updateServiceFields(service, request);
+        
+        if (request.getTechnologies() != null) {
+            updateTechnologies(service, request.getTechnologies());
+        }
+
+        APIService updatedService = apiServiceRepository.save(service);
+        return mapToResponse(updatedService);
+    }
+
+    private void updateServiceFields(APIService service, UpdateApiServiceRequest request) {
+        try {
+            BeanUtils.copyProperties(request, service, 
+                "serviceId", "technologies", "dataSources");
+            
+            if (request.getDataSources() != null) {
+                objectMapper.updateValue(service.getDataSources(), request.getDataSources());
+            }
+            
+            updateListIfPresent(service::setClientConsumers, request.getClientConsumers());
+            updateListIfPresent(service::setConsumes, request.getConsumes());
+            updateListIfPresent(service::setConsumedBy, request.getConsumedBy());
+            
+        } catch (Exception e) {
+            throw new TechnicalException("Field update failed", e);
+        }
+    }
+
+    private <T> void updateListIfPresent(Consumer<List<T>> setter, List<T> newValues) {
+        if (newValues != null) {
+            setter.accept(new ArrayList<>(newValues));
+        }
+    }
+
+    private void updateTechnologies(APIService service, List<TechnologyUpdateDTO> techUpdates) {
+        techUpdates.forEach(tech -> {
+            switch (tech.getOperation()) {
+                case ADD -> addTechnology(service, tech);
+                case UPDATE -> updateTechnology(service, tech);
+                case REMOVE -> removeTechnology(service, tech.getName());
+                default -> throw new IllegalArgumentException("Unsupported operation: " + tech.getOperation());
+            }
+        });
+    }
+
+    private void addTechnology(APIService service, TechnologyUpdateDTO tech) {
+        if (technologiesRepository.existsByApiServiceAndTechnologyName(service, tech.getName())) {
+            throw new ConflictException("Technology " + tech.getName() + " already exists");
+        }
+
+        ServiceTechnologies newTech = new ServiceTechnologies();
+        newTech.setApiService(service);
+        newTech.setTechnologyName(tech.getName().toUpperCase());
+        newTech.setTechnologyVersion(tech.getVersion());
+        technologiesRepository.save(newTech);
+    }
+
+    private void updateTechnology(APIService service, TechnologyUpdateDTO tech) {
+        technologiesRepository.findByApiServiceAndTechnologyName(service, tech.getName())
+            .ifPresentOrElse(
+                existingTech -> {
+                    existingTech.setTechnologyVersion(tech.getVersion());
+                    technologiesRepository.save(existingTech);
+                },
+                () -> {
+                    throw new EntityNotFoundException("Technology " + tech.getName() + " not found");
+                }
+            );
+    }
+
+    private void removeTechnology(APIService service, String techName) {
+        if (!technologiesRepository.existsByApiServiceAndTechnologyName(service, techName)) {
+            throw new EntityNotFoundException("Technology " + techName + " not found");
+        }
+        technologiesRepository.deleteByApiServiceAndTechnologyName(service.getId(), techName);
+    }
+
+    private ApiServiceDetailResponse mapToResponse(APIService service) {
+        ApiServiceDetailResponse response = new ApiServiceDetailResponse();
+        BeanUtils.copyProperties(service, response);
+        
+        List<ServiceTechnologies> technologies = technologiesRepository.findByApiServiceId(service.getId());
+        response.setTechnologies(mapTechnologies(technologies));
+        
+        return response;
+    }
+
+    private List<TechnologyDTO> mapTechnologies(List<ServiceTechnologies> technologies) {
+        return technologies.stream()
+            .map(t -> new TechnologyDTO(
+                t.getTechnologyName(),
+                t.getTechnologyVersion(),
+                t.getCreatedAt()))
+            .toList();
+    }
+}

@@ -1,0 +1,63 @@
+@Data
+public class UpdateApiServiceRequest {
+    @NotNull
+    private UUID serviceId;
+    
+    // Champs de base
+    private String name;
+    private String description;
+    private String trigramme;
+    private Boolean bridgeCommunication;
+    private String criticality;
+    private String poCodev;
+    private String techlead;
+    
+    // Technologies natives
+    private Boolean java17Migrated;
+    private Boolean sonarized;
+    private String sonarReportUrl;
+    private Boolean jfrogMigrated;
+    private String springVersion;
+    
+    // Métadonnées
+    private String githubUrl;
+    private String developmentStatus;
+    private String bridgeName;
+    private String documentedBy;
+    private Boolean documented;
+    private Boolean publishedOnSkies;
+    private Boolean deployedOnDev;
+    private Boolean migrationTestedOnDev;
+    
+    // Sources de données
+    private DataSourcesDTO dataSources;
+    
+    // Relations
+    private List<String> clientConsumers;
+    private List<String> consumes;
+    private List<String> consumedBy;
+    
+    // Technologies additionnelles
+    @Valid
+    private List<TechnologyUpdateDTO> technologies;
+
+    @Data
+    public static class DataSourcesDTO {
+        private Boolean rabbitMQ;
+        private Boolean commonDB;
+        private Boolean dedicatedDB;
+        private Boolean s3;
+    }
+
+    @Data
+    public static class TechnologyUpdateDTO {
+        @NotBlank
+        private String name;
+        private String version;
+        private Operation operation;
+    }
+
+    public enum Operation {
+        ADD, REMOVE, UPDATE
+    }
+}
