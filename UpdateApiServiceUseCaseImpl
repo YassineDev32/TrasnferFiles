@@ -170,3 +170,49 @@ public class UpdateAPIServiceUseCaseImpl implements UpdateAPIServiceUseCase {
             .toList();
     }
 }
+
+
+
+
+private void updateClientConsumers(APIService service, List<String> clientConsumerNames) {
+    if (clientConsumerNames != null) {
+        // Clear existing consumers
+        service.getClientConsumers().clear();
+        
+        // Add new consumers
+        clientConsumerNames.forEach(name -> {
+            ClientConsumer consumer = new ClientConsumer();
+            consumer.setName(name);
+            consumer.setService(service); // Set the bidirectional relationship
+            service.getClientConsumers().add(consumer);
+        });
+    }
+}
+
+
+
+
+private void updateConsumes(APIService service, List<String> consumesNames) {
+    if (consumesNames != null) {
+        service.getConsumes().clear();
+        consumesNames.forEach(name -> {
+            Consumer consumer = new Consumer();
+            consumer.setName(name);
+            consumer.setService(service);
+            service.getConsumes().add(consumer);
+        });
+    }
+}
+
+private void updateConsumedBy(APIService service, List<String> consumedByNames) {
+    if (consumedByNames != null) {
+        service.getConsumedBy().clear();
+        consumedByNames.forEach(name -> {
+            ConsumedBy consumedBy = new ConsumedBy();
+            consumedBy.setName(name);
+            consumedBy.setService(service);
+            service.getConsumedBy().add(consumedBy);
+        });
+    }
+}
+
