@@ -1,5 +1,5 @@
 @Data
-public class UpdateApiServiceRequest {
+public class UpdateAPIServiceCommand {
     @NotNull
     private UUID serviceId;
     
@@ -8,7 +8,7 @@ public class UpdateApiServiceRequest {
     private String description;
     private Boolean bridgeCommunication;
     private String criticality;
-    private String poCodev;
+    private String poCoevey;
     private String techlead;
     private Boolean java17Migrated;
     private Boolean sonarized;
@@ -29,6 +29,7 @@ public class UpdateApiServiceRequest {
     private List<String> consumedBy;
     private List<EndpointDTO> endpoints;
     private String databaseSchema;
+    private List<TechnologyDTO> technologies;
 
     @Data
     public static class DataSourcesDTO {
@@ -45,5 +46,11 @@ public class UpdateApiServiceRequest {
         private String curl;
         private String expectedResponse;
         private String description;
+    }
+
+    @Data
+    public static class TechnologyDTO {
+        private String name;
+        private String version;
     }
 }
