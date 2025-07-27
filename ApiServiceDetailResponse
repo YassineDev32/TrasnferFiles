@@ -1,13 +1,13 @@
 @Data
 @Builder
-public class ApiServiceResponse {
+public class APIServiceDetailDTO {
     private UUID id;
     private String name;
     private String trigramme;
     private String description;
     private boolean bridgeCommunication;
     private String criticality;
-    private String poCodev;
+    private String poCoevey;
     private String techlead;
     private boolean java17Migrated;
     private boolean sonarized;
@@ -18,7 +18,7 @@ public class ApiServiceResponse {
     private String springVersion;
     private String bridgeName;
     private String documentedBy;
-    private boolean documented;
+    private boolean isDocumented;
     private boolean publishedOnSkies;
     private boolean deployedOnDev;
     private boolean migrationTestedOnDev;
@@ -28,6 +28,9 @@ public class ApiServiceResponse {
     private List<String> consumedBy;
     private List<EndpointDTO> endpoints;
     private String databaseSchema;
+    private List<TechnologyDTO> technologies;
+    private ZonedDateTime createdAt;
+    private ZonedDateTime updatedAt;
 
     @Data
     @Builder
@@ -46,5 +49,13 @@ public class ApiServiceResponse {
         private String curl;
         private String expectedResponse;
         private String description;
+    }
+
+    @Data
+    @Builder
+    public static class TechnologyDTO {
+        private String name;
+        private String version;
+        private ZonedDateTime createdAt;
     }
 }
