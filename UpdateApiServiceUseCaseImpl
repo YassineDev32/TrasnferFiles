@@ -1,66 +1,67 @@
 @Service
 @RequiredArgsConstructor
-@Transactional
-public class UpdateAPIServiceUseCaseImpl implements UpdateAPIServiceUseCase {
+public class UpdateApiServiceUseCaseImpl implements UpdateApiServiceUseCase {
 
     private final APIServiceRepository apiServiceRepository;
-    private final TechnologyRepository technologyRepository;
 
     @Override
-    public APIServiceDetailDTO handle(UpdateAPIServiceCommand command) {
+    @Transactional
+    public APIService handle(UpdateApiServiceCommand command) {
         APIService service = apiServiceRepository.findById(command.getServiceId())
             .orElseThrow(() -> new EntityNotFoundException("APIService not found with id: " + command.getServiceId()));
 
-        updateCoreFields(service, command);
+        updateServiceFields(service, command);
         updateDataSources(service, command.getDataSources());
         updateEndpoints(service, command.getEndpoints());
-        updateTechnologies(service, command.getTechnologies());
 
-        APIService updatedService = apiServiceRepository.save(service);
-        return mapToDTO(updatedService);
+        return apiServiceRepository.save(service);
     }
 
-    private void updateCoreFields(APIService service, UpdateAPIServiceCommand command) {
-        Optional.ofNullable(command.getName()).ifPresent(service::setName);
-        Optional.ofNullable(command.getTrigramme()).ifPresent(service::setTrigramme);
-        Optional.ofNullable(command.getDescription()).ifPresent(service::setDescription);
-        Optional.ofNullable(command.getBridgeCommunication()).ifPresent(service::setBridgeCommunication);
-        Optional.ofNullable(command.getCriticality()).ifPresent(service::setCriticality);
-        Optional.ofNullable(command.getPoCoevey()).ifPresent(service::setPoCoevey);
-        Optional.ofNullable(command.getTechlead()).ifPresent(service::setTechlead);
-        Optional.ofNullable(command.getJava17Migrated()).ifPresent(service::setJava17Migrated);
-        Optional.ofNullable(command.getSonarized()).ifPresent(service::setSonarized);
-        Optional.ofNullable(command.getSonarReportUrl()).ifPresent(service::setSonarReportUrl);
-        Optional.ofNullable(command.getJfrogMigrated()).ifPresent(service::setJfrogMigrated);
-        Optional.ofNullable(command.getGithubUrl()).ifPresent(service::setGithubUrl);
-        Optional.ofNullable(command.getDevelopmentStatus()).ifPresent(service::setDevelopmentStatus);
-        Optional.ofNullable(command.getSpringVersion()).ifPresent(service::setSpringVersion);
-        Optional.ofNullable(command.getBridgeName()).ifPresent(service::setBridgeName);
-        Optional.ofNullable(command.getDocumentedBy()).ifPresent(service::setDocumentedBy);
-        Optional.ofNullable(command.getDocumented()).ifPresent(service::setDocumented);
-        Optional.ofNullable(command.getPublishedOnSkies()).ifPresent(service::setPublishedOnSkies);
-        Optional.ofNullable(command.getDeployedOnDev()).ifPresent(service::setDeployedOnDev);
-        Optional.ofNullable(command.getMigrationTestedOnDev()).ifPresent(service::setMigrationTestedOnDev);
-        Optional.ofNullable(command.getDatabaseSchema()).ifPresent(service::setDatabaseSchema);
-        Optional.ofNullable(command.getClientConsumers()).ifPresent(service::setClientConsumers);
-        Optional.ofNullable(command.getConsumes()).ifPresent(service::setConsumes);
-        Optional.ofNullable(command.getConsumedBy()).ifPresent(service::setConsumedBy);
+    private void updateServiceFields(APIService service, UpdateApiServiceCommand command) {
+        if (command.getName() != null) service.setName(command.getName());
+        if (command.getTrigramme() != null) service.setTrigramme(command.getTrigramme());
+        if (command.getDescription() != null) service.setDescription(command.getDescription());
+        if (command.getBridgeCommunication() != null) service.setBridgeCommunication(command.getBridgeCommunication());
+        if (command.getCriticality() != null) service.setCriticality(command.getCriticality());
+        if (command.getPoCodev() != null) service.setPoCodev(command.getPoCodev());
+        if (command.getTechlead() != null) service.setTechlead(command.getTechlead());
+        if (command.getJava17Migrated() != null) service.setJava17Migrated(command.getJava17Migrated());
+        if (command.getSonarized() != null) service.setSonarized(command.getSonarized());
+        if (command.getSonarReportUrl() != null) service.setSonarReportUrl(command.getSonarReportUrl());
+        if (command.getJfrogMigrated() != null) service.setJfrogMigrated(command.getJfrogMigrated());
+        if (command.getGithubUrl() != null) service.setGithubUrl(command.getGithubUrl());
+        if (command.getDevelopmentStatus() != null) service.setDevelopmentStatus(command.getDevelopmentStatus());
+        if (command.getSpringVersion() != null) service.setSpringVersion(command.getSpringVersion());
+        if (command.getBridgeName() != null) service.setBridgeName(command.getBridgeName());
+        if (command.getDocumentedBy() != null) service.setDocumentedBy(command.getDocumentedBy());
+        if (command.getDocumented() != null) service.setDocumented(command.getDocumented());
+        if (command.getPublishedOnSkies() != null) service.setPublishedOnSkies(command.getPublishedOnSkies());
+        if (command.getDeployedOnDev() != null) service.setDeployedOnDev(command.getDeployedOnDev());
+        if (command.getMigrationTestedOnDev() != null) service.setMigrationTestedOnDev(command.getMigrationTestedOnDev());
+        if (command.getDatabaseSchema() != null) service.setDatabaseSchema(command.getDatabaseSchema());
+        
+        // Update lists
+        if (command.getClientConsumers() != null) service.setClientConsumers(command.getClientConsumers());
+        if (command.getConsumes() != null) service.setConsumes(command.getConsumes());
+        if (command.getConsumedBy() != null) service.setConsumedBy(command.getConsumedBy());
     }
 
-    private void updateDataSources(APIService service, UpdateAPIServiceCommand.DataSourcesDTO dataSources) {
+    private void updateDataSources(APIService service, Map<String, Boolean> dataSources) {
         if (dataSources != null) {
-            DataSources ds = service.getDatasources() != null ? service.getDatasources() : new DataSources();
+            DataSources existingDataSources = service.getDatasources() != null 
+                ? service.getDatasources() 
+                : new DataSources();
             
-            Optional.ofNullable(dataSources.getRabbitMQ()).ifPresent(ds::setRabbitMQ);
-            Optional.ofNullable(dataSources.getCommonDB()).ifPresent(ds::setCommonDB);
-            Optional.ofNullable(dataSources.getDedicatedDB()).ifPresent(ds::setDedicatedDB);
-            Optional.ofNullable(dataSources.getS3()).ifPresent(ds::setS3);
+            if (dataSources.containsKey("rabbitMQ")) existingDataSources.setRabbitMQ(dataSources.get("rabbitMQ"));
+            if (dataSources.containsKey("commonDB")) existingDataSources.setCommonDB(dataSources.get("commonDB"));
+            if (dataSources.containsKey("dedicatedDB")) existingDataSources.setDedicatedDB(dataSources.get("dedicatedDB"));
+            if (dataSources.containsKey("s3")) existingDataSources.setS3(dataSources.get("s3"));
             
-            service.setDatasources(ds);
+            service.setDatasources(existingDataSources);
         }
     }
 
-    private void updateEndpoints(APIService service, List<UpdateAPIServiceCommand.EndpointDTO> endpoints) {
+    private void updateEndpoints(APIService service, List<UpdateApiServiceCommand.EndpointDTO> endpoints) {
         if (endpoints != null) {
             // Clear existing endpoints
             service.getEndpoints().clear();
@@ -78,141 +79,4 @@ public class UpdateAPIServiceUseCaseImpl implements UpdateAPIServiceUseCase {
             });
         }
     }
-
-    private void updateTechnologies(APIService service, List<UpdateAPIServiceCommand.TechnologyDTO> technologies) {
-        if (technologies != null) {
-            // Clear existing technologies
-            technologyRepository.deleteByApiService(service);
-            
-            // Add new technologies
-            technologies.forEach(dto -> {
-                ServiceTechnology tech = new ServiceTechnology();
-                tech.setApiService(service);
-                tech.setTechnologyName(dto.getName());
-                tech.setTechnologyVersion(dto.getVersion());
-                technologyRepository.save(tech);
-            });
-        }
-    }
-
-    private APIServiceDetailDTO mapToDTO(APIService service) {
-        return APIServiceDetailDTO.builder()
-            .id(service.getId())
-            .name(service.getName())
-            .trigramme(service.getTrigramme())
-            .description(service.getDescription())
-            .bridgeCommunication(service.isBridgeCommunication())
-            .criticality(service.getCriticality())
-            .poCoevey(service.getPoCoevey())
-            .techlead(service.getTechlead())
-            .java17Migrated(service.isJava17Migrated())
-            .sonarized(service.isSonarized())
-            .sonarReportUrl(service.getSonarReportUrl())
-            .jfrogMigrated(service.isJfrogMigrated())
-            .githubUrl(service.getGithubUrl())
-            .developmentStatus(service.getDevelopmentStatus())
-            .springVersion(service.getSpringVersion())
-            .bridgeName(service.getBridgeName())
-            .documentedBy(service.getDocumentedBy())
-            .isDocumented(service.isDocumented())
-            .publishedOnSkies(service.isPublishedOnSkies())
-            .deployedOnDev(service.isDeployedOnDev())
-            .migrationTestedOnDev(service.isMigrationTestedOnDev())
-            .dataSources(mapDataSources(service.getDatasources()))
-            .clientConsumers(service.getClientConsumers())
-            .consumes(service.getConsumes())
-            .consumedBy(service.getConsumedBy())
-            .endpoints(mapEndpoints(service.getEndpoints()))
-            .databaseSchema(service.getDatabaseSchema())
-            .technologies(mapTechnologies(technologyRepository.findByApiService(service)))
-            .createdAt(service.getCreatedAt())
-            .updatedAt(service.getUpdatedAt())
-            .build();
-    }
-
-    private APIServiceDetailDTO.DataSourcesDTO mapDataSources(DataSources dataSources) {
-        if (dataSources == null) {
-            return APIServiceDetailDTO.DataSourcesDTO.builder()
-                .rabbitMQ(false)
-                .commonDB(false)
-                .dedicatedDB(false)
-                .s3(false)
-                .build();
-        }
-        return APIServiceDetailDTO.DataSourcesDTO.builder()
-            .rabbitMQ(dataSources.isRabbitMQ())
-            .commonDB(dataSources.isCommonDB())
-            .dedicatedDB(dataSources.isDedicatedDB())
-            .s3(dataSources.isS3())
-            .build();
-    }
-
-    private List<APIServiceDetailDTO.EndpointDTO> mapEndpoints(List<Endpoint> endpoints) {
-        if (endpoints == null) return Collections.emptyList();
-        return endpoints.stream()
-            .map(e -> APIServiceDetailDTO.EndpointDTO.builder()
-                .method(e.getMethod())
-                .path(e.getPath())
-                .curl(e.getCurl())
-                .expectedResponse(e.getExpectedResponse())
-                .description(e.getDescription())
-                .build())
-            .toList();
-    }
-
-    private List<APIServiceDetailDTO.TechnologyDTO> mapTechnologies(List<ServiceTechnology> technologies) {
-        return technologies.stream()
-            .map(t -> APIServiceDetailDTO.TechnologyDTO.builder()
-                .name(t.getTechnologyName())
-                .version(t.getTechnologyVersion())
-                .createdAt(t.getCreatedAt())
-                .build())
-            .toList();
-    }
 }
-
-
-
-
-private void updateClientConsumers(APIService service, List<String> clientConsumerNames) {
-    if (clientConsumerNames != null) {
-        // Clear existing consumers
-        service.getClientConsumers().clear();
-        
-        // Add new consumers
-        clientConsumerNames.forEach(name -> {
-            ClientConsumer consumer = new ClientConsumer();
-            consumer.setName(name);
-            consumer.setService(service); // Set the bidirectional relationship
-            service.getClientConsumers().add(consumer);
-        });
-    }
-}
-
-
-
-
-private void updateConsumes(APIService service, List<String> consumesNames) {
-    if (consumesNames != null) {
-        service.getConsumes().clear();
-        consumesNames.forEach(name -> {
-            Consumer consumer = new Consumer();
-            consumer.setName(name);
-            consumer.setService(service);
-            service.getConsumes().add(consumer);
-        });
-    }
-}
-
-private void updateConsumedBy(APIService service, List<String> consumedByNames) {
-    if (consumedByNames != null) {
-        service.getConsumedBy().clear();
-        consumedByNames.forEach(name -> {
-            ConsumedBy consumedBy = new ConsumedBy();
-            consumedBy.setName(name);
-            consumedBy.setService(service);
-            service.getConsumedBy().add(consumedBy);
-        });
-    }
-}
-
