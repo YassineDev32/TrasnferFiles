@@ -72,96 +72,87 @@ public class UpdateAPIServiceUseCase {
         APIService service = apiServiceRepository.findById(cmd.getId())
                 .orElseThrow(() -> new RuntimeException("APIService not found"));
 
-        cmd.getName().ifPresent(service::setName);
-        cmd.getTrigramme().ifPresent(service::setTrigramme);
-        cmd.getDescription().ifPresent(service::setDescription);
-        cmd.getBridgeCommunication().ifPresent(service::setBridgeCommunication);
-        cmd.getCriticality().ifPresent(service::setCriticality);
-        cmd.getP0Coevey().ifPresent(service::setPoCodev);
-        cmd.getTechlead().ifPresent(service::setTechlead);
-        cmd.getJava17Migrated().ifPresent(service::setJava17Migrated);
-        cmd.getSonarized().ifPresent(service::setSonarized);
-        cmd.getSonarReportUrl().ifPresent(service::setSonarReportUrl);
-        cmd.getVersion().ifPresent(service::setVersion);
-        cmd.getJfrogMigrated().ifPresent(service::setJfrogMigrated);
-        cmd.getGithubUrl().ifPresent(service::setGithubUrl);
-        cmd.getDevelopmentStatus().ifPresent(service::setDevelopmentStatus);
-        cmd.getSpringVersion().ifPresent(service::setSpringVersion);
-        cmd.getServicesCountByTrigramme().ifPresent(service::setServicesCountByTrigramme);
-        cmd.getBridgeName().ifPresent(service::setBridgeName);
-        cmd.getDocumentedBy().ifPresent(service::setDocumentedBy);
-        cmd.getIsDocumented().ifPresent(service::setDocumented);
-        cmd.getPublishedOnSkies().ifPresent(service::setPublishedOnSkies);
-        cmd.getDeployedOnDev().ifPresent(service::setDeployedOnDev);
-        cmd.getMigrationTestedOnDev().ifPresent(service::setMigrationTestedOnDev);
-
-        cmd.getDataSources().ifPresent(dto -> {
-            DataSources ds = new DataSources();
-            ds.setRabbitMQ(dto.getRabbitMQ());
-            ds.setCommonDB(dto.getCommonDB());
-            ds.setDedicatedDB(dto.getDedicatedDB());
-            ds.setS3(dto.getS3());
+        if (cmd.getName() != null) service.setName(cmd.getName());
+        if (cmd.getTrigramme() != null) service.setTrigramme(cmd.getTrigramme());
+        if (cmd.getDescription() != null) service.setDescription(cmd.getDescription());
+        service.setBridgeCommunication(cmd.isBridgeCommunication());
+        if (cmd.getCriticality() != null) service.setCriticality(cmd.getCriticality());
+        if (cmd.getP0Coevey() != null) service.setP0Coevey(cmd.getP0Coevey());
+        if (cmd.getTechlead() != null) service.setTechlead(cmd.getTechlead());
+        service.setJava17Migrated(cmd.isJava17Migrated());
+        service.setSonarized(cmd.isSonarized());
+        if (cmd.getSonarReportUrl() != null) service.setSonarReportUrl(cmd.getSonarReportUrl());
+        if (cmd.getVersion() != null) service.setVersion(cmd.getVersion());
+        service.setJfrogMigrated(cmd.isJfrogMigrated());
+        if (cmd.getGithubUrl() != null) service.setGithubUrl(cmd.getGithubUrl());
+        if (cmd.getDevelopmentStatus() != null) service.setDevelopmentStatus(cmd.getDevelopmentStatus());
+        if (cmd.getSpringVersion() != null) service.setSpringVersion(cmd.getSpringVersion());
+        if (cmd.getServicesCountByTrigramme() != null) service.setServicesCountByTrigramme(cmd.getServicesCountByTrigramme());
+        if (cmd.getBridgeName() != null) service.setBridgeName(cmd.getBridgeName());
+        if (cmd.getDocumentedBy() != null) service.setDocumentedBy(cmd.getDocumentedBy());
+        service.setDocumented(cmd.isDocumented());
+        service.setPublishedOnSkies(cmd.isPublishedOnSkies());
+        service.setDeployedOnDev(cmd.isDeployedOnDev());
+        service.setMigrationTestedOnDev(cmd.isMigrationTestedOnDev());
+    
+        // DataSources
+        if (cmd.getDataSources() != null) {
+            DataSourcesDTO dto = cmd.getDataSources();
+            DataSources ds = Optional.ofNullable(service.getDatasources()).orElse(new DataSources());
+            if (dto.getRabbitMQ() != null) ds.setRabbitMQ(dto.getRabbitMQ());
+            if (dto.getCommonDB() != null) ds.setCommonDB(dto.getCommonDB());
+            if (dto.getDedicatedDB() != null) ds.setDedicatedDB(dto.getDedicatedDB());
+            if (dto.getS3() != null) ds.setS3(dto.getS3());
             service.setDatasources(ds);
-        });
-
-        cmd.getClientConsumers().ifPresent(consumerNames -> {
-            List<ClientConsumer> clientConsumers = consumerNames.stream()
-                .map(name -> {
-                    ClientConsumer cc = new ClientConsumer();
-                    cc.setName(name);
-                    cc.setService(service); // Important : lien bidirectionnel
-                    return cc;
-                })
-                .collect(Collectors.toList());
-        
-            service.setClientConsumers(clientConsumers);
-        });
-        cmd.getConsumes().ifPresent(consumers -> {
-            List<Consumer> consumeList = consumers.stream()
-                .map(name -> {
-                    Consumer c = new Consumer();
-                    c.setName(name);
-                    c.setService(service);
-                    return c;
-                })
-                .collect(Collectors.toList());
-        
-            service.setConsumes(consumeList);
-        });
-
-        cmd.getConsumedBy().ifPresent(producerNames -> {
-            List<ConsumedBy> consumedByList = producerNames.stream()
-                .map(name -> {
-                    ConsumedBy cb = new ConsumedBy();
-                    cb.setName(name);
-                    cb.setService(service);
-                    return cb;
-                })
-                .collect(Collectors.toList());
-        
-            service.setConsumedBy(consumedByList);
-        });
-
-        cmd.getEndpoints().ifPresent(endpointDTOs -> {
-            List<Endpoint> endpoints = endpointDTOs.stream()
-                .map(dto -> {
-                    Endpoint ep = new Endpoint();
-                    ep.setMethod(dto.getMethod());
-                    ep.setPath(dto.getPath());
-                    ep.setCurl(dto.getCurl());
-                    ep.setExpectedResponse(dto.getExpectedResponse());
-                    ep.setDescription(dto.getDescription());
-                    ep.setService(service); // lien vers le service parent
-                    return ep;
-                })
-                .collect(Collectors.toList());
-        
-            service.setEndpoints(endpoints);
-        });
-
-
-        return mapToResponse(apiServiceRepository.save(service));
-    }
+        }
+    
+        // Listes : reset complet
+        if (cmd.getClientConsumers() != null) {
+            service.getClientConsumers().clear();
+            service.getClientConsumers().addAll(
+                cmd.getClientConsumers().stream()
+                    .map(name -> new ClientConsumer(name, service))
+                    .collect(Collectors.toList())
+            );
+        }
+    
+        if (cmd.getConsumes() != null) {
+            service.getConsumes().clear();
+            service.getConsumes().addAll(
+                cmd.getConsumes().stream()
+                    .map(name -> new Consumer(name, service))
+                    .collect(Collectors.toList())
+            );
+        }
+    
+        if (cmd.getConsumedBy() != null) {
+            service.getConsumedBy().clear();
+            service.getConsumedBy().addAll(
+                cmd.getConsumedBy().stream()
+                    .map(name -> new ConsumedBy(name, service))
+                    .collect(Collectors.toList())
+            );
+        }
+    
+        if (cmd.getEndpoints() != null) {
+            service.getEndpoints().clear();
+            service.getEndpoints().addAll(
+                cmd.getEndpoints().stream()
+                    .map(dto -> {
+                        Endpoint endpoint = new Endpoint();
+                        endpoint.setService(service);
+                        endpoint.setMethod(dto.getMethod());
+                        endpoint.setPath(dto.getPath());
+                        endpoint.setCurl(dto.getCurl());
+                        endpoint.setExpectedResponse(dto.getExpectedResponse());
+                        endpoint.setDescription(dto.getDescription());
+                        return endpoint;
+                    })
+                    .collect(Collectors.toList())
+            );
+        }
+            return mapToResponse(apiServiceRepository.save(service));
+        }
 
     private UpdateApiServiceResponse mapToResponse(APIService service) {
         return UpdateApiServiceResponse.builder()
