@@ -1,44 +1,44 @@
 @Data
 @Builder
-public class APIServiceDetailDTO {
+public class UpdateAPIServiceResponse {
     private UUID id;
     private String name;
     private String trigramme;
     private String description;
     private boolean bridgeCommunication;
     private String criticality;
-    private String poCoevey;
+    private String p0Coevey;
     private String techlead;
     private boolean java17Migrated;
     private boolean sonarized;
     private String sonarReportUrl;
+    private String version;
     private boolean jfrogMigrated;
     private String githubUrl;
     private String developmentStatus;
     private String springVersion;
+    private Integer servicesCountByTrigramme;
     private String bridgeName;
     private String documentedBy;
     private boolean isDocumented;
     private boolean publishedOnSkies;
     private boolean deployedOnDev;
     private boolean migrationTestedOnDev;
+
     private DataSourcesDTO dataSources;
+
     private List<String> clientConsumers;
     private List<String> consumes;
     private List<String> consumedBy;
     private List<EndpointDTO> endpoints;
-    private String databaseSchema;
-    private List<TechnologyDTO> technologies;
-    private ZonedDateTime createdAt;
-    private ZonedDateTime updatedAt;
 
     @Data
     @Builder
     public static class DataSourcesDTO {
-        private boolean rabbitMQ;
-        private boolean commonDB;
-        private boolean dedicatedDB;
-        private boolean s3;
+        private Boolean rabbitMQ;
+        private Boolean commonDB;
+        private Boolean dedicatedDB;
+        private Boolean s3;
     }
 
     @Data
@@ -49,13 +49,5 @@ public class APIServiceDetailDTO {
         private String curl;
         private String expectedResponse;
         private String description;
-    }
-
-    @Data
-    @Builder
-    public static class TechnologyDTO {
-        private String name;
-        private String version;
-        private ZonedDateTime createdAt;
     }
 }
