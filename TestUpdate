@@ -174,3 +174,67 @@ public class UpdateApiServiceResponse {
     private String name;
     private String message;
 }
+
+
+
+
+{
+  "id": "4f8a95a0-1234-4b6c-9f1a-7e62c4e3e123",
+  "name": "Nouveau Nom Service",
+  "trigramme": "NMS",
+  "description": "Description mise à jour",
+  "bridgeCommunication": true,
+  "criticality": "Moyenne",
+  "p0Coevey": "PO123",
+  "techlead": "Jean Dupont",
+  "java17Migrated": true,
+  "sonarized": false,
+  "sonarReportUrl": "http://sonar.example.com/report/123",
+  "version": "2.1.0",
+  "jfrogMigrated": true,
+  "githubUrl": "https://github.com/monrepo",
+  "developmentStatus": "En développement",
+  "springVersion": "5.3.20",
+  "servicesCountByTrigramme": 5,
+  "bridgeName": "BridgeX",
+  "documentedBy": "Alice Martin",
+  "isDocumented": true,
+  "publishedOnSkies": false,
+  "deployedOnDev": true,
+  "migrationTestedOnDev": false,
+  
+  "dataSources": {
+    "rabbitMQ": true,
+    "commonDB": false,
+    "dedicatedDB": true,
+    "s3": false
+  },
+
+  "clientConsumers": [
+    "ClientA",
+    "ClientB"
+  ],
+  "consumes": [
+    "ServiceX",
+    "ServiceY"
+  ],
+  "consumedBy": [
+    "ServiceZ"
+  ],
+  "endpoints": [
+    {
+      "method": "GET",
+      "path": "/api/test",
+      "curl": "curl -X GET http://localhost/api/test",
+      "expectedResponse": "{\"status\":\"ok\"}",
+      "description": "Endpoint test"
+    },
+    {
+      "method": "POST",
+      "path": "/api/create",
+      "curl": "curl -X POST http://localhost/api/create -d '{\"name\":\"test\"}'",
+      "expectedResponse": "{\"id\":1}",
+      "description": "Création de ressource"
+    }
+  ]
+}
