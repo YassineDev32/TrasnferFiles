@@ -1,42 +1,34 @@
 @Data
-public class UpdateApiServiceCommand {
-    @NotNull
-    private UUID serviceId;
-    
+@Builder
+public class UpdateAPIServiceCommand {
+    private String id;
     private String name;
     private String trigramme;
     private String description;
-    private Boolean bridgeCommunication;
+    private boolean bridgeCommunication;
     private String criticality;
-    private String poCodev;
+    private String p0Coevey;
     private String techlead;
-    private Boolean java17Migrated;
-    private Boolean sonarized;
+    private boolean java17Migrated;
+    private boolean sonarized;
     private String sonarReportUrl;
-    private Boolean jfrogMigrated;
+    private String version;
+    private boolean jfrogMigrated;
     private String githubUrl;
     private String developmentStatus;
     private String springVersion;
+    private Integer servicesCountByTrigramme;
     private String bridgeName;
     private String documentedBy;
-    private Boolean documented;
-    private Boolean publishedOnSkies;
-    private Boolean deployedOnDev;
-    private Boolean migrationTestedOnDev;
-    private Map<String, Boolean> dataSources;
-    private List<String> clientConsumers;
-    private List<String> consumes;
-    private List<String> consumedBy;
-    private List<EndpointDTO> endpoints;
-    private String databaseSchema;
+    private boolean isDocumented;
+    private boolean publishedOnSkies;
+    private boolean deployedOnDev;
+    private boolean migrationTestedOnDev;
+    private DataSourceDTO dataSources;
 
-    @Data
-    @AllArgsConstructor
-    public static class EndpointDTO {
-        private String method;
-        private String path;
-        private String curl;
-        private String expectedResponse;
-        private String description;
-    }
+
+    private List<String> clientConsumers; 
+    private List<String> consumes; 
+    private List<String> consumedBy; 
+    private List<EndpointDTO> endpoints;
 }
