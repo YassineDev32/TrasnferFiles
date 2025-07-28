@@ -1,5 +1,5 @@
 @Data
-public class UpdateAPIServiceCommand {
+public class UpdateApiServiceCommand {
     @NotNull
     private UUID serviceId;
     
@@ -8,7 +8,7 @@ public class UpdateAPIServiceCommand {
     private String description;
     private Boolean bridgeCommunication;
     private String criticality;
-    private String poCoevey;
+    private String poCodev;
     private String techlead;
     private Boolean java17Migrated;
     private Boolean sonarized;
@@ -23,34 +23,20 @@ public class UpdateAPIServiceCommand {
     private Boolean publishedOnSkies;
     private Boolean deployedOnDev;
     private Boolean migrationTestedOnDev;
-    private DataSourcesDTO dataSources;
+    private Map<String, Boolean> dataSources;
     private List<String> clientConsumers;
     private List<String> consumes;
     private List<String> consumedBy;
     private List<EndpointDTO> endpoints;
     private String databaseSchema;
-    private List<TechnologyDTO> technologies;
 
     @Data
-    public static class DataSourcesDTO {
-        private Boolean rabbitMQ;
-        private Boolean commonDB;
-        private Boolean dedicatedDB;
-        private Boolean s3;
-    }
-
-    @Data
+    @AllArgsConstructor
     public static class EndpointDTO {
         private String method;
         private String path;
         private String curl;
         private String expectedResponse;
         private String description;
-    }
-
-    @Data
-    public static class TechnologyDTO {
-        private String name;
-        private String version;
     }
 }
