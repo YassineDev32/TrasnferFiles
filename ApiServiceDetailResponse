@@ -95,6 +95,7 @@ private UpdateAPIServiceResponse mapToResponse(APIService service) {
                 .build()
             : null)
 
+
         .clientConsumers(service.getClientConsumers().stream()
             .map(ClientConsumer::getName)
             .toList())
