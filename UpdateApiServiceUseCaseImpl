@@ -1,119 +1,97 @@
 @Service
 @RequiredArgsConstructor
-public class UpdateApiServiceUseCaseImpl implements UpdateApiServiceUseCase {
+public class UpdateAPIServiceUseCase {
 
-    private final APIServiceRepository apiServiceRepository;
+    private final APIServiceRepository repository;
 
-    @Override
     @Transactional
-    public APIService handle(UpdateApiServiceCommand command) {
-        APIService service = apiServiceRepository.findById(command.getServiceId())
-            .orElseThrow(() -> new EntityNotFoundException("APIService not found with id: " + command.getServiceId()));
+    public APIService handle(UpdateAPIServiceCommand cmd) {
+        UUID id = UUID.fromString(cmd.getId());
+        APIService service = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("APIService not found"));
 
-        updateServiceFields(service, command);
-        updateDataSources(service, command.getDataSources());
-        updateEndpoints(service, command.getEndpoints());
+        // --- Champs simples
+        service.setName(cmd.getName());
+        service.setTrigramme(cmd.getTrigramme());
+        service.setDescription(cmd.getDescription());
+        service.setBridgeCommunication(cmd.isBridgeCommunication());
+        service.setCriticality(cmd.getCriticality());
+        service.setP0Coevey(cmd.getP0Coevey());
+        service.setTechlead(cmd.getTechlead());
+        service.setJava17Migrated(cmd.isJava17Migrated());
+        service.setSonarized(cmd.isSonarized());
+        service.setSonarReportUrl(cmd.getSonarReportUrl());
+        service.setVersion(cmd.getVersion());
+        service.setJfrogMigrated(cmd.isJfrogMigrated());
+        service.setGithubUrl(cmd.getGithubUrl());
+        service.setDevelopmentStatus(cmd.getDevelopmentStatus());
+        service.setSpringVersion(cmd.getSpringVersion());
+        service.setServicesCountByTrigramme(cmd.getServicesCountByTrigramme());
+        service.setBridgeName(cmd.getBridgeName());
+        service.setDocumentedBy(cmd.getDocumentedBy());
+        service.setDocumented(cmd.isDocumented());
+        service.setPublishedOnSkies(cmd.isPublishedOnSkies());
+        service.setDeployedOnDev(cmd.isDeployedOnDev());
+        service.setMigrationTestedOnDev(cmd.isMigrationTestedOnDev());
 
-        return apiServiceRepository.save(service);
-    }
-
-    private void updateServiceFields(APIService service, UpdateApiServiceCommand command) {
-        if (command.getName() != null) service.setName(command.getName());
-        if (command.getTrigramme() != null) service.setTrigramme(command.getTrigramme());
-        if (command.getDescription() != null) service.setDescription(command.getDescription());
-        if (command.getBridgeCommunication() != null) service.setBridgeCommunication(command.getBridgeCommunication());
-        if (command.getCriticality() != null) service.setCriticality(command.getCriticality());
-        if (command.getPoCodev() != null) service.setPoCodev(command.getPoCodev());
-        if (command.getTechlead() != null) service.setTechlead(command.getTechlead());
-        if (command.getJava17Migrated() != null) service.setJava17Migrated(command.getJava17Migrated());
-        if (command.getSonarized() != null) service.setSonarized(command.getSonarized());
-        if (command.getSonarReportUrl() != null) service.setSonarReportUrl(command.getSonarReportUrl());
-        if (command.getJfrogMigrated() != null) service.setJfrogMigrated(command.getJfrogMigrated());
-        if (command.getGithubUrl() != null) service.setGithubUrl(command.getGithubUrl());
-        if (command.getDevelopmentStatus() != null) service.setDevelopmentStatus(command.getDevelopmentStatus());
-        if (command.getSpringVersion() != null) service.setSpringVersion(command.getSpringVersion());
-        if (command.getBridgeName() != null) service.setBridgeName(command.getBridgeName());
-        if (command.getDocumentedBy() != null) service.setDocumentedBy(command.getDocumentedBy());
-        if (command.getDocumented() != null) service.setDocumented(command.getDocumented());
-        if (command.getPublishedOnSkies() != null) service.setPublishedOnSkies(command.getPublishedOnSkies());
-        if (command.getDeployedOnDev() != null) service.setDeployedOnDev(command.getDeployedOnDev());
-        if (command.getMigrationTestedOnDev() != null) service.setMigrationTestedOnDev(command.getMigrationTestedOnDev());
-        if (command.getDatabaseSchema() != null) service.setDatabaseSchema(command.getDatabaseSchema());
-        
-        // Update lists
-        if (command.getClientConsumers() != null) {
-            updateClientConsumers(service, command.getClientConsumers());
+        // --- DataSources (objet imbriqué)
+        if (cmd.getDataSources() != null) {
+            DataSources ds = new DataSources();
+            ds.setRabbitMQ(cmd.getDataSources().getRabbitMQ());
+            ds.setCommonDB(cmd.getDataSources().getCommonDB());
+            ds.setDedicatedDB(cmd.getDataSources().getDedicatedDB());
+            ds.setS3(cmd.getDataSources().getS3());
+            service.setDatasources(ds);
         }
-        if (command.getConsumes() != null) {
-            updateConsumes(service, command.getConsumes());
-        }
-        if (command.getConsumedBy() != null) {
-            updateConsumedBy(service, command.getConsumedBy());
-        }
-    }
 
-    private void updateDataSources(APIService service, Map<String, Boolean> dataSources) {
-        if (dataSources != null) {
-            DataSources existingDataSources = service.getDatasources() != null 
-                ? service.getDatasources() 
-                : new DataSources();
-            
-            if (dataSources.containsKey("rabbitMQ")) existingDataSources.setRabbitMQ(dataSources.get("rabbitMQ"));
-            if (dataSources.containsKey("commonDB")) existingDataSources.setCommonDB(dataSources.get("commonDB"));
-            if (dataSources.containsKey("dedicatedDB")) existingDataSources.setDedicatedDB(dataSources.get("dedicatedDB"));
-            if (dataSources.containsKey("s3")) existingDataSources.setS3(dataSources.get("s3"));
-            
-            service.setDatasources(existingDataSources);
+        // --- clientConsumers (List<String>)
+        service.getClientConsumers().clear();
+        if (cmd.getClientConsumers() != null) {
+            for (String consumerName : cmd.getClientConsumers()) {
+                ClientConsumer cc = new ClientConsumer();
+                cc.setName(consumerName);
+                cc.setService(service);
+                service.getClientConsumers().add(cc);
+            }
         }
-    }
 
-    private void updateEndpoints(APIService service, List<UpdateApiServiceCommand.EndpointDTO> endpoints) {
-        if (endpoints != null) {
-            // Clear existing endpoints
-            service.getEndpoints().clear();
-            
-            // Add new endpoints
-            endpoints.forEach(dto -> {
+        // --- consumes (List<String>)
+        service.getConsumes().clear();
+        if (cmd.getConsumes() != null) {
+            for (String consumeName : cmd.getConsumes()) {
+                Consumer c = new Consumer();
+                c.setName(consumeName);
+                c.setService(service);
+                service.getConsumes().add(c);
+            }
+        }
+
+        // --- consumedBy (List<String>)
+        service.getConsumedBy().clear();
+        if (cmd.getConsumedBy() != null) {
+            for (String cbName : cmd.getConsumedBy()) {
+                ConsumedBy cb = new ConsumedBy();
+                cb.setConsumerName(cbName);
+                cb.setService(service);
+                service.getConsumedBy().add(cb);
+            }
+        }
+
+        // --- endpoints (List<EndpointDTO>)
+        service.getEndpoints().clear();
+        if (cmd.getEndpoints() != null) {
+            for (UpdateAPIServiceCommand.EndpointDTO dto : cmd.getEndpoints()) {
                 Endpoint endpoint = new Endpoint();
-                endpoint.setService(service);
                 endpoint.setMethod(dto.getMethod());
                 endpoint.setPath(dto.getPath());
                 endpoint.setCurl(dto.getCurl());
                 endpoint.setExpectedResponse(dto.getExpectedResponse());
                 endpoint.setDescription(dto.getDescription());
+                endpoint.setService(service);
                 service.getEndpoints().add(endpoint);
-            });
+            }
         }
-    }
-    private void updateClientConsumers(APIService service, List<String> clientConsumerNames) {
-        // Supprimer les anciens ClientConsumers
-        service.getClientConsumers().clear();
-        
-        // Créer et ajouter les nouveaux
-        clientConsumerNames.forEach(name -> {
-            ClientConsumer clientConsumer = new ClientConsumer();
-            clientConsumer.setName(name);
-            clientConsumer.setService(service);
-            service.getClientConsumers().add(clientConsumer);
-        });
-    }
-    private void updateConsumes(APIService service, List<String> consumeNames) {
-        service.getConsumes().clear();
-        consumeNames.forEach(name -> {
-            Consumer consumer = new Consumer();
-            consumer.setName(name);
-            consumer.setService(service);
-            service.getConsumes().add(consumer);
-        });
-    }
-    
-    private void updateConsumedBy(APIService service, List<String> consumedByNames) {
-        service.getConsumedBy().clear();
-        consumedByNames.forEach(name -> {
-            ConsumedBy consumedBy = new ConsumedBy();
-            consumedBy.setName(name);
-            consumedBy.setService(service);
-            service.getConsumedBy().add(consumedBy);
-        });
+
+        return repository.save(service);
     }
 }
