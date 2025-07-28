@@ -51,3 +51,72 @@ public class UpdateAPIServiceResponse {
         private String description;
     }
 }
+
+
+
+
+
+
+
+
+
+private UpdateAPIServiceResponse mapToResponse(APIService service) {
+    return UpdateAPIServiceResponse.builder()
+        .id(service.getId())
+        .name(service.getName())
+        .trigramme(service.getTrigramme())
+        .description(service.getDescription())
+        .bridgeCommunication(service.isBridgeCommunication())
+        .criticality(service.getCriticality())
+        .p0Coevey(service.getP0Coevey())
+        .techlead(service.getTechlead())
+        .java17Migrated(service.isJava17Migrated())
+        .sonarized(service.isSonarized())
+        .sonarReportUrl(service.getSonarReportUrl())
+        .version(service.getVersion())
+        .jfrogMigrated(service.isJfrogMigrated())
+        .githubUrl(service.getGithubUrl())
+        .developmentStatus(service.getDevelopmentStatus())
+        .springVersion(service.getSpringVersion())
+        .servicesCountByTrigramme(service.getServicesCountByTrigramme())
+        .bridgeName(service.getBridgeName())
+        .documentedBy(service.getDocumentedBy())
+        .isDocumented(service.isDocumented())
+        .publishedOnSkies(service.isPublishedOnSkies())
+        .deployedOnDev(service.isDeployedOnDev())
+        .migrationTestedOnDev(service.isMigrationTestedOnDev())
+
+        .dataSources(service.getDatasources() != null
+            ? UpdateAPIServiceResponse.DataSourcesDTO.builder()
+                .rabbitMQ(service.getDatasources().getRabbitMQ())
+                .commonDB(service.getDatasources().getCommonDB())
+                .dedicatedDB(service.getDatasources().getDedicatedDB())
+                .s3(service.getDatasources().getS3())
+                .build()
+            : null)
+
+        .clientConsumers(service.getClientConsumers().stream()
+            .map(ClientConsumer::getName)
+            .toList())
+
+        .consumes(service.getConsumes().stream()
+            .map(Consumer::getName)
+            .toList())
+
+        .consumedBy(service.getConsumedBy().stream()
+            .map(ConsumedBy::getConsumerName)
+            .toList())
+
+        .endpoints(service.getEndpoints().stream()
+            .map(endpoint -> UpdateAPIServiceResponse.EndpointDTO.builder()
+                .method(endpoint.getMethod())
+                .path(endpoint.getPath())
+                .curl(endpoint.getCurl())
+                .expectedResponse(endpoint.getExpectedResponse())
+                .description(endpoint.getDescription())
+                .build())
+            .toList())
+
+        .build();
+}
+
