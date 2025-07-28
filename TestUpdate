@@ -1,0 +1,97 @@
+@Service
+@RequiredArgsConstructor
+public class UpdateAPIServiceUseCase {
+
+    private final APIServiceRepository repository;
+
+    @Transactional
+    public APIService handle(UpdateAPIServiceCommand cmd) {
+        UUID id = UUID.fromString(cmd.getId());
+        APIService service = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("APIService not found"));
+
+        // --- Champs simples
+        service.setName(cmd.getName());
+        service.setTrigramme(cmd.getTrigramme());
+        service.setDescription(cmd.getDescription());
+        service.setBridgeCommunication(cmd.isBridgeCommunication());
+        service.setCriticality(cmd.getCriticality());
+        service.setP0Coevey(cmd.getP0Coevey());
+        service.setTechlead(cmd.getTechlead());
+        service.setJava17Migrated(cmd.isJava17Migrated());
+        service.setSonarized(cmd.isSonarized());
+        service.setSonarReportUrl(cmd.getSonarReportUrl());
+        service.setVersion(cmd.getVersion());
+        service.setJfrogMigrated(cmd.isJfrogMigrated());
+        service.setGithubUrl(cmd.getGithubUrl());
+        service.setDevelopmentStatus(cmd.getDevelopmentStatus());
+        service.setSpringVersion(cmd.getSpringVersion());
+        service.setServicesCountByTrigramme(cmd.getServicesCountByTrigramme());
+        service.setBridgeName(cmd.getBridgeName());
+        service.setDocumentedBy(cmd.getDocumentedBy());
+        service.setDocumented(cmd.isDocumented());
+        service.setPublishedOnSkies(cmd.isPublishedOnSkies());
+        service.setDeployedOnDev(cmd.isDeployedOnDev());
+        service.setMigrationTestedOnDev(cmd.isMigrationTestedOnDev());
+
+        // --- DataSources (objet imbriqué)
+        if (cmd.getDataSources() != null) {
+            DataSources ds = new DataSources();
+            ds.setRabbitMQ(cmd.getDataSources().getRabbitMQ());
+            ds.setCommonDB(cmd.getDataSources().getCommonDB());
+            ds.setDedicatedDB(cmd.getDataSources().getDedicatedDB());
+            ds.setS3(cmd.getDataSources().getS3());
+            service.setDatasources(ds);
+        }
+
+        // --- clientConsumers (List<String>)
+        service.getClientConsumers().clear();
+        if (cmd.getClientConsumers() != null) {
+            for (String consumerName : cmd.getClientConsumers()) {
+                ClientConsumer cc = new ClientConsumer();
+                cc.setName(consumerName);
+                cc.setService(service);
+                service.getClientConsumers().add(cc);
+            }
+        }
+
+        // --- consumes (List<String>)
+        service.getConsumes().clear();
+        if (cmd.getConsumes() != null) {
+            for (String consumeName : cmd.getConsumes()) {
+                Consumer c = new Consumer();
+                c.setName(consumeName);
+                c.setService(service);
+                service.getConsumes().add(c);
+            }
+        }
+
+        // --- consumedBy (List<String>)
+        service.getConsumedBy().clear();
+        if (cmd.getConsumedBy() != null) {
+            for (String cbName : cmd.getConsumedBy()) {
+                ConsumedBy cb = new ConsumedBy();
+                cb.setConsumerName(cbName);
+                cb.setService(service);
+                service.getConsumedBy().add(cb);
+            }
+        }
+
+        // --- endpoints (List<EndpointDTO>)
+        service.getEndpoints().clear();
+        if (cmd.getEndpoints() != null) {
+            for (UpdateAPIServiceCommand.EndpointDTO dto : cmd.getEndpoints()) {
+                Endpoint endpoint = new Endpoint();
+                endpoint.setMethod(dto.getMethod());
+                endpoint.setPath(dto.getPath());
+                endpoint.setCurl(dto.getCurl());
+                endpoint.setExpectedResponse(dto.getExpectedResponse());
+                endpoint.setDescription(dto.getDescription());
+                endpoint.setService(service);
+                service.getEndpoints().add(endpoint);
+            }
+        }
+
+        return repository.save(service);
+    }
+}
