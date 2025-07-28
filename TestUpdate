@@ -104,10 +104,61 @@ public class UpdateAPIServiceUseCase {
             service.setDatasources(ds);
         });
 
-        cmd.getClientConsumers().ifPresent(service::setClientConsumers);
-        cmd.getConsumes().ifPresent(service::setConsumes);
-        cmd.getConsumedBy().ifPresent(service::setConsumedBy);
-        cmd.getEndpoints().ifPresent(service::setEndpoints);
+        cmd.getClientConsumers().ifPresent(consumerNames -> {
+            List<ClientConsumer> clientConsumers = consumerNames.stream()
+                .map(name -> {
+                    ClientConsumer cc = new ClientConsumer();
+                    cc.setName(name);
+                    cc.setService(service); // Important : lien bidirectionnel
+                    return cc;
+                })
+                .collect(Collectors.toList());
+        
+            service.setClientConsumers(clientConsumers);
+        });
+        cmd.getConsumes().ifPresent(consumers -> {
+            List<Consumer> consumeList = consumers.stream()
+                .map(name -> {
+                    Consumer c = new Consumer();
+                    c.setName(name);
+                    c.setService(service);
+                    return c;
+                })
+                .collect(Collectors.toList());
+        
+            service.setConsumes(consumeList);
+        });
+
+        cmd.getConsumedBy().ifPresent(producerNames -> {
+            List<ConsumedBy> consumedByList = producerNames.stream()
+                .map(name -> {
+                    ConsumedBy cb = new ConsumedBy();
+                    cb.setName(name);
+                    cb.setService(service);
+                    return cb;
+                })
+                .collect(Collectors.toList());
+        
+            service.setConsumedBy(consumedByList);
+        });
+
+        cmd.getEndpoints().ifPresent(endpointDTOs -> {
+            List<Endpoint> endpoints = endpointDTOs.stream()
+                .map(dto -> {
+                    Endpoint ep = new Endpoint();
+                    ep.setMethod(dto.getMethod());
+                    ep.setPath(dto.getPath());
+                    ep.setCurl(dto.getCurl());
+                    ep.setExpectedResponse(dto.getExpectedResponse());
+                    ep.setDescription(dto.getDescription());
+                    ep.setService(service); // lien vers le service parent
+                    return ep;
+                })
+                .collect(Collectors.toList());
+        
+            service.setEndpoints(endpoints);
+        });
+
 
         return mapToResponse(apiServiceRepository.save(service));
     }
