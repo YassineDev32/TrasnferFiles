@@ -41,9 +41,15 @@ public class UpdateApiServiceUseCaseImpl implements UpdateApiServiceUseCase {
         if (command.getDatabaseSchema() != null) service.setDatabaseSchema(command.getDatabaseSchema());
         
         // Update lists
-        if (command.getClientConsumers() != null) service.setClientConsumers(command.getClientConsumers());
-        if (command.getConsumes() != null) service.setConsumes(command.getConsumes());
-        if (command.getConsumedBy() != null) service.setConsumedBy(command.getConsumedBy());
+        if (command.getClientConsumers() != null) {
+            updateClientConsumers(service, command.getClientConsumers());
+        }
+        if (command.getConsumes() != null) {
+            updateConsumes(service, command.getConsumes());
+        }
+        if (command.getConsumedBy() != null) {
+            updateConsumedBy(service, command.getConsumedBy());
+        }
     }
 
     private void updateDataSources(APIService service, Map<String, Boolean> dataSources) {
@@ -78,5 +84,36 @@ public class UpdateApiServiceUseCaseImpl implements UpdateApiServiceUseCase {
                 service.getEndpoints().add(endpoint);
             });
         }
+    }
+    private void updateClientConsumers(APIService service, List<String> clientConsumerNames) {
+        // Supprimer les anciens ClientConsumers
+        service.getClientConsumers().clear();
+        
+        // Créer et ajouter les nouveaux
+        clientConsumerNames.forEach(name -> {
+            ClientConsumer clientConsumer = new ClientConsumer();
+            clientConsumer.setName(name);
+            clientConsumer.setService(service);
+            service.getClientConsumers().add(clientConsumer);
+        });
+    }
+    private void updateConsumes(APIService service, List<String> consumeNames) {
+        service.getConsumes().clear();
+        consumeNames.forEach(name -> {
+            Consumer consumer = new Consumer();
+            consumer.setName(name);
+            consumer.setService(service);
+            service.getConsumes().add(consumer);
+        });
+    }
+    
+    private void updateConsumedBy(APIService service, List<String> consumedByNames) {
+        service.getConsumedBy().clear();
+        consumedByNames.forEach(name -> {
+            ConsumedBy consumedBy = new ConsumedBy();
+            consumedBy.setName(name);
+            consumedBy.setService(service);
+            service.getConsumedBy().add(consumedBy);
+        });
     }
 }
