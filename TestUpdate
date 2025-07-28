@@ -1,97 +1,134 @@
+// UpdateAPIServiceCommand.java
+import lombok.Builder;
+import lombok.Data;
+
+import java.util.List;
+import java.util.Optional;
+
+@Data
+@Builder
+public class UpdateAPIServiceCommand {
+    private String id;
+
+    private Optional<String> name;
+    private Optional<String> trigramme;
+    private Optional<String> description;
+    private Optional<Boolean> bridgeCommunication;
+    private Optional<String> criticality;
+    private Optional<String> p0Coevey;
+    private Optional<String> techlead;
+    private Optional<Boolean> java17Migrated;
+    private Optional<Boolean> sonarized;
+    private Optional<String> sonarReportUrl;
+    private Optional<String> version;
+    private Optional<Boolean> jfrogMigrated;
+    private Optional<String> githubUrl;
+    private Optional<String> developmentStatus;
+    private Optional<String> springVersion;
+    private Optional<Integer> servicesCountByTrigramme;
+    private Optional<String> bridgeName;
+    private Optional<String> documentedBy;
+    private Optional<Boolean> isDocumented;
+    private Optional<Boolean> publishedOnSkies;
+    private Optional<Boolean> deployedOnDev;
+    private Optional<Boolean> migrationTestedOnDev;
+
+    private Optional<DataSourcesDTO> dataSources;
+
+    private Optional<List<String>> clientConsumers;
+    private Optional<List<String>> consumes;
+    private Optional<List<String>> consumedBy;
+    private Optional<List<EndpointDTO>> endpoints;
+
+    @Data
+    public static class DataSourcesDTO {
+        private Boolean rabbitMQ;
+        private Boolean commonDB;
+        private Boolean dedicatedDB;
+        private Boolean s3;
+    }
+
+    @Data
+    public static class EndpointDTO {
+        private String method;
+        private String path;
+        private String curl;
+        private String expectedResponse;
+        private String description;
+    }
+}
+
+// UpdateAPIServiceUseCase.java
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
 @Service
 @RequiredArgsConstructor
 public class UpdateAPIServiceUseCase {
 
-    private final APIServiceRepository repository;
+    private final APIServiceRepository apiServiceRepository;
 
-    @Transactional
-    public APIService handle(UpdateAPIServiceCommand cmd) {
-        UUID id = UUID.fromString(cmd.getId());
-        APIService service = repository.findById(id)
+    public UpdateApiServiceResponse handle(UpdateAPIServiceCommand cmd) {
+        APIService service = apiServiceRepository.findById(cmd.getId())
                 .orElseThrow(() -> new RuntimeException("APIService not found"));
 
-        // --- Champs simples
-        service.setName(cmd.getName());
-        service.setTrigramme(cmd.getTrigramme());
-        service.setDescription(cmd.getDescription());
-        service.setBridgeCommunication(cmd.isBridgeCommunication());
-        service.setCriticality(cmd.getCriticality());
-        service.setP0Coevey(cmd.getP0Coevey());
-        service.setTechlead(cmd.getTechlead());
-        service.setJava17Migrated(cmd.isJava17Migrated());
-        service.setSonarized(cmd.isSonarized());
-        service.setSonarReportUrl(cmd.getSonarReportUrl());
-        service.setVersion(cmd.getVersion());
-        service.setJfrogMigrated(cmd.isJfrogMigrated());
-        service.setGithubUrl(cmd.getGithubUrl());
-        service.setDevelopmentStatus(cmd.getDevelopmentStatus());
-        service.setSpringVersion(cmd.getSpringVersion());
-        service.setServicesCountByTrigramme(cmd.getServicesCountByTrigramme());
-        service.setBridgeName(cmd.getBridgeName());
-        service.setDocumentedBy(cmd.getDocumentedBy());
-        service.setDocumented(cmd.isDocumented());
-        service.setPublishedOnSkies(cmd.isPublishedOnSkies());
-        service.setDeployedOnDev(cmd.isDeployedOnDev());
-        service.setMigrationTestedOnDev(cmd.isMigrationTestedOnDev());
+        cmd.getName().ifPresent(service::setName);
+        cmd.getTrigramme().ifPresent(service::setTrigramme);
+        cmd.getDescription().ifPresent(service::setDescription);
+        cmd.getBridgeCommunication().ifPresent(service::setBridgeCommunication);
+        cmd.getCriticality().ifPresent(service::setCriticality);
+        cmd.getP0Coevey().ifPresent(service::setPoCodev);
+        cmd.getTechlead().ifPresent(service::setTechlead);
+        cmd.getJava17Migrated().ifPresent(service::setJava17Migrated);
+        cmd.getSonarized().ifPresent(service::setSonarized);
+        cmd.getSonarReportUrl().ifPresent(service::setSonarReportUrl);
+        cmd.getVersion().ifPresent(service::setVersion);
+        cmd.getJfrogMigrated().ifPresent(service::setJfrogMigrated);
+        cmd.getGithubUrl().ifPresent(service::setGithubUrl);
+        cmd.getDevelopmentStatus().ifPresent(service::setDevelopmentStatus);
+        cmd.getSpringVersion().ifPresent(service::setSpringVersion);
+        cmd.getServicesCountByTrigramme().ifPresent(service::setServicesCountByTrigramme);
+        cmd.getBridgeName().ifPresent(service::setBridgeName);
+        cmd.getDocumentedBy().ifPresent(service::setDocumentedBy);
+        cmd.getIsDocumented().ifPresent(service::setDocumented);
+        cmd.getPublishedOnSkies().ifPresent(service::setPublishedOnSkies);
+        cmd.getDeployedOnDev().ifPresent(service::setDeployedOnDev);
+        cmd.getMigrationTestedOnDev().ifPresent(service::setMigrationTestedOnDev);
 
-        // --- DataSources (objet imbriqué)
-        if (cmd.getDataSources() != null) {
+        cmd.getDataSources().ifPresent(dto -> {
             DataSources ds = new DataSources();
-            ds.setRabbitMQ(cmd.getDataSources().getRabbitMQ());
-            ds.setCommonDB(cmd.getDataSources().getCommonDB());
-            ds.setDedicatedDB(cmd.getDataSources().getDedicatedDB());
-            ds.setS3(cmd.getDataSources().getS3());
+            ds.setRabbitMQ(dto.getRabbitMQ());
+            ds.setCommonDB(dto.getCommonDB());
+            ds.setDedicatedDB(dto.getDedicatedDB());
+            ds.setS3(dto.getS3());
             service.setDatasources(ds);
-        }
+        });
 
-        // --- clientConsumers (List<String>)
-        service.getClientConsumers().clear();
-        if (cmd.getClientConsumers() != null) {
-            for (String consumerName : cmd.getClientConsumers()) {
-                ClientConsumer cc = new ClientConsumer();
-                cc.setName(consumerName);
-                cc.setService(service);
-                service.getClientConsumers().add(cc);
-            }
-        }
+        cmd.getClientConsumers().ifPresent(service::setClientConsumers);
+        cmd.getConsumes().ifPresent(service::setConsumes);
+        cmd.getConsumedBy().ifPresent(service::setConsumedBy);
+        cmd.getEndpoints().ifPresent(service::setEndpoints);
 
-        // --- consumes (List<String>)
-        service.getConsumes().clear();
-        if (cmd.getConsumes() != null) {
-            for (String consumeName : cmd.getConsumes()) {
-                Consumer c = new Consumer();
-                c.setName(consumeName);
-                c.setService(service);
-                service.getConsumes().add(c);
-            }
-        }
-
-        // --- consumedBy (List<String>)
-        service.getConsumedBy().clear();
-        if (cmd.getConsumedBy() != null) {
-            for (String cbName : cmd.getConsumedBy()) {
-                ConsumedBy cb = new ConsumedBy();
-                cb.setConsumerName(cbName);
-                cb.setService(service);
-                service.getConsumedBy().add(cb);
-            }
-        }
-
-        // --- endpoints (List<EndpointDTO>)
-        service.getEndpoints().clear();
-        if (cmd.getEndpoints() != null) {
-            for (UpdateAPIServiceCommand.EndpointDTO dto : cmd.getEndpoints()) {
-                Endpoint endpoint = new Endpoint();
-                endpoint.setMethod(dto.getMethod());
-                endpoint.setPath(dto.getPath());
-                endpoint.setCurl(dto.getCurl());
-                endpoint.setExpectedResponse(dto.getExpectedResponse());
-                endpoint.setDescription(dto.getDescription());
-                endpoint.setService(service);
-                service.getEndpoints().add(endpoint);
-            }
-        }
-
-        return repository.save(service);
+        return mapToResponse(apiServiceRepository.save(service));
     }
+
+    private UpdateApiServiceResponse mapToResponse(APIService service) {
+        return UpdateApiServiceResponse.builder()
+                .id(service.getId())
+                .name(service.getName())
+                .message("Service mis à jour avec succès")
+                .build();
+    }
+}
+
+// UpdateApiServiceResponse.java
+import lombok.Builder;
+import lombok.Data;
+
+@Data
+@Builder
+public class UpdateApiServiceResponse {
+    private String id;
+    private String name;
+    private String message;
 }
